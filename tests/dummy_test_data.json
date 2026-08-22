@@ -1,0 +1,874 @@
+{
+  "business_profile": {
+    "id": 1,
+    "business_name": "Sri Lakshmi Electronics & Mobiles",
+    "owner_name": "Karthik Sharma",
+    "category": "Consumer Electronics & Mobile Accessories",
+    "city": "Bengaluru, India",
+    "currency": "₹",
+    "auto_pilot_enabled": 1,
+    "auto_order_threshold": 5000.0,
+    "approval_required_above": 5000.0
+  },
+  "products": [
+    {
+      "id": "PRD-101",
+      "name": "Boat BassHeads Earphones",
+      "category": "Audio",
+      "stock": 8,
+      "avg_daily_sales": 6.0,
+      "min_stock": 20,
+      "unit_price": 699.0,
+      "cost_price": 425.0,
+      "default_supplier_id": "SUP-001",
+      "lead_time_days": 3,
+      "image_url": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200"
+    },
+    {
+      "id": "PRD-102",
+      "name": "65W Fast GaN Charger (Type-C)",
+      "category": "Accessories",
+      "stock": 28,
+      "avg_daily_sales": 4.0,
+      "min_stock": 15,
+      "unit_price": 1299.0,
+      "cost_price": 850.0,
+      "default_supplier_id": "SUP-001",
+      "lead_time_days": 2,
+      "image_url": "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=200"
+    },
+    {
+      "id": "PRD-103",
+      "name": "100W Braided Type-C Cable (1.5m)",
+      "category": "Cables",
+      "stock": 45,
+      "avg_daily_sales": 7.5,
+      "min_stock": 20,
+      "unit_price": 399.0,
+      "cost_price": 180.0,
+      "default_supplier_id": "SUP-003",
+      "lead_time_days": 2,
+      "image_url": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200"
+    },
+    {
+      "id": "PRD-104",
+      "name": "OnePlus Nord Buds 2 TWS",
+      "category": "Audio",
+      "stock": 4,
+      "avg_daily_sales": 2.5,
+      "min_stock": 10,
+      "unit_price": 2499.0,
+      "cost_price": 1750.0,
+      "default_supplier_id": "SUP-002",
+      "lead_time_days": 4,
+      "image_url": "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=200"
+    },
+    {
+      "id": "PRD-105",
+      "name": "Fastrack Limitless Smartwatch",
+      "category": "Wearables",
+      "stock": 14,
+      "avg_daily_sales": 2.0,
+      "min_stock": 8,
+      "unit_price": 1999.0,
+      "cost_price": 1300.0,
+      "default_supplier_id": "SUP-004",
+      "lead_time_days": 3,
+      "image_url": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200"
+    },
+    {
+      "id": "PRD-106",
+      "name": "SanDisk 128GB High-Speed MicroSD",
+      "category": "Storage",
+      "stock": 36,
+      "avg_daily_sales": 5.0,
+      "min_stock": 15,
+      "unit_price": 849.0,
+      "cost_price": 520.0,
+      "default_supplier_id": "SUP-004",
+      "lead_time_days": 2,
+      "image_url": "https://images.unsplash.com/photo-1628191010210-a59de33e5941?w=200"
+    },
+    {
+      "id": "PRD-107",
+      "name": "Portronics 20000mAh Power Bank",
+      "category": "Power",
+      "stock": 6,
+      "avg_daily_sales": 3.2,
+      "min_stock": 12,
+      "unit_price": 1699.0,
+      "cost_price": 1100.0,
+      "default_supplier_id": "SUP-001",
+      "lead_time_days": 2,
+      "image_url": "https://images.unsplash.com/photo-1609592807903-bb114620f4c3?w=200"
+    },
+    {
+      "id": "PRD-108",
+      "name": "Tempered Glass Screen Guard (Universal)",
+      "category": "Protection",
+      "stock": 110,
+      "avg_daily_sales": 12.0,
+      "min_stock": 30,
+      "unit_price": 199.0,
+      "cost_price": 45.0,
+      "default_supplier_id": "SUP-005",
+      "lead_time_days": 2,
+      "image_url": "https://images.unsplash.com/photo-1580910051074-3eb694886505?w=200"
+    },
+    {
+      "id": "PRD-109",
+      "name": "JBL Go 3 Portable Bluetooth Speaker",
+      "category": "Audio",
+      "stock": 5,
+      "avg_daily_sales": 1.8,
+      "min_stock": 8,
+      "unit_price": 2999.0,
+      "cost_price": 2100.0,
+      "default_supplier_id": "SUP-003",
+      "lead_time_days": 3,
+      "image_url": "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=200"
+    },
+    {
+      "id": "PRD-110",
+      "name": "Spigen Rugged Armor Phone Case",
+      "category": "Cases",
+      "stock": 19,
+      "avg_daily_sales": 2.8,
+      "min_stock": 10,
+      "unit_price": 899.0,
+      "cost_price": 520.0,
+      "default_supplier_id": "SUP-002",
+      "lead_time_days": 3,
+      "image_url": "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=200"
+    }
+  ],
+  "suppliers": [
+    {
+      "id": "SUP-001",
+      "name": "ABC Electronics Distributors",
+      "contact_name": "Anand Kumar",
+      "phone": "+91 98450 12345",
+      "email": "anand@abcelectronics.in",
+      "city": "Bengaluru",
+      "reliability_score": 96.5,
+      "payment_terms": "Net 15",
+      "order_history_count": 38
+    },
+    {
+      "id": "SUP-002",
+      "name": "Apex DigiTech Wholesale",
+      "contact_name": "Suresh Patel",
+      "phone": "+91 98200 54321",
+      "email": "sales@apexdigitech.com",
+      "city": "Mumbai",
+      "reliability_score": 85.0,
+      "payment_terms": "Net 30",
+      "order_history_count": 22
+    },
+    {
+      "id": "SUP-003",
+      "name": "Sonic Sound & Cable Hub",
+      "contact_name": "Murali Nathan",
+      "phone": "+91 94440 98765",
+      "email": "orders@sonichub.in",
+      "city": "Chennai",
+      "reliability_score": 90.5,
+      "payment_terms": "Immediate / UPI",
+      "order_history_count": 15
+    },
+    {
+      "id": "SUP-004",
+      "name": "Reliance Digital Trade Mart",
+      "contact_name": "Pooja Reddy",
+      "phone": "+91 99000 11223",
+      "email": "trade@reliancedigital.co",
+      "city": "Hyderabad",
+      "reliability_score": 94.0,
+      "payment_terms": "Net 7",
+      "order_history_count": 45
+    },
+    {
+      "id": "SUP-005",
+      "name": "Vardhaman Components & Parts",
+      "contact_name": "Dinesh Jain",
+      "phone": "+91 97654 11223",
+      "email": "vardhaman.trade@gmail.com",
+      "city": "Delhi",
+      "reliability_score": 91.0,
+      "payment_terms": "Net 15",
+      "order_history_count": 29
+    }
+  ],
+  "supplier_products": [
+    {
+      "supplier_id": "SUP-001",
+      "product_id": "PRD-101",
+      "price": 425.0,
+      "lead_time_days": 2,
+      "moq": 10
+    },
+    {
+      "supplier_id": "SUP-002",
+      "product_id": "PRD-101",
+      "price": 410.0,
+      "lead_time_days": 5,
+      "moq": 20
+    },
+    {
+      "supplier_id": "SUP-003",
+      "product_id": "PRD-101",
+      "price": 450.0,
+      "lead_time_days": 1,
+      "moq": 5
+    },
+    {
+      "supplier_id": "SUP-001",
+      "product_id": "PRD-102",
+      "price": 850.0,
+      "lead_time_days": 2,
+      "moq": 5
+    },
+    {
+      "supplier_id": "SUP-004",
+      "product_id": "PRD-102",
+      "price": 870.0,
+      "lead_time_days": 3,
+      "moq": 5
+    },
+    {
+      "supplier_id": "SUP-003",
+      "product_id": "PRD-103",
+      "price": 180.0,
+      "lead_time_days": 2,
+      "moq": 20
+    },
+    {
+      "supplier_id": "SUP-001",
+      "product_id": "PRD-103",
+      "price": 195.0,
+      "lead_time_days": 2,
+      "moq": 10
+    },
+    {
+      "supplier_id": "SUP-002",
+      "product_id": "PRD-104",
+      "price": 1750.0,
+      "lead_time_days": 4,
+      "moq": 5
+    },
+    {
+      "supplier_id": "SUP-001",
+      "product_id": "PRD-104",
+      "price": 1820.0,
+      "lead_time_days": 2,
+      "moq": 5
+    },
+    {
+      "supplier_id": "SUP-004",
+      "product_id": "PRD-105",
+      "price": 1300.0,
+      "lead_time_days": 3,
+      "moq": 5
+    },
+    {
+      "supplier_id": "SUP-001",
+      "product_id": "PRD-105",
+      "price": 1350.0,
+      "lead_time_days": 2,
+      "moq": 5
+    },
+    {
+      "supplier_id": "SUP-004",
+      "product_id": "PRD-106",
+      "price": 520.0,
+      "lead_time_days": 2,
+      "moq": 10
+    },
+    {
+      "supplier_id": "SUP-003",
+      "product_id": "PRD-106",
+      "price": 540.0,
+      "lead_time_days": 1,
+      "moq": 10
+    },
+    {
+      "supplier_id": "SUP-001",
+      "product_id": "PRD-107",
+      "price": 1100.0,
+      "lead_time_days": 2,
+      "moq": 5
+    },
+    {
+      "supplier_id": "SUP-002",
+      "product_id": "PRD-107",
+      "price": 1080.0,
+      "lead_time_days": 4,
+      "moq": 10
+    },
+    {
+      "supplier_id": "SUP-005",
+      "product_id": "PRD-108",
+      "price": 45.0,
+      "lead_time_days": 2,
+      "moq": 50
+    },
+    {
+      "supplier_id": "SUP-001",
+      "product_id": "PRD-108",
+      "price": 52.0,
+      "lead_time_days": 1,
+      "moq": 20
+    },
+    {
+      "supplier_id": "SUP-003",
+      "product_id": "PRD-109",
+      "price": 2100.0,
+      "lead_time_days": 3,
+      "moq": 4
+    },
+    {
+      "supplier_id": "SUP-004",
+      "product_id": "PRD-109",
+      "price": 2150.0,
+      "lead_time_days": 2,
+      "moq": 4
+    },
+    {
+      "supplier_id": "SUP-002",
+      "product_id": "PRD-110",
+      "price": 520.0,
+      "lead_time_days": 3,
+      "moq": 10
+    },
+    {
+      "supplier_id": "SUP-005",
+      "product_id": "PRD-110",
+      "price": 540.0,
+      "lead_time_days": 2,
+      "moq": 10
+    }
+  ],
+  "customers": [
+    {
+      "id": "CUST-001",
+      "name": "Rahul Verma",
+      "company": "Sharma Tech Solutions",
+      "phone": "+91 98765 43210",
+      "email": "rahul@sharmatech.in",
+      "city": "Bengaluru",
+      "credit_limit": 50000.0,
+      "total_purchases": 48500.0
+    },
+    {
+      "id": "CUST-002",
+      "name": "Priya Nair",
+      "company": "Greenfield Cafe & Workhub",
+      "phone": "+91 97654 32109",
+      "email": "priya@greenfield.com",
+      "city": "Bengaluru",
+      "credit_limit": 25000.0,
+      "total_purchases": 14200.0
+    },
+    {
+      "id": "CUST-003",
+      "name": "Vikram Singh",
+      "company": "Apex Digital Media",
+      "phone": "+91 96543 21098",
+      "email": "vikram@apexmedia.co",
+      "city": "Mysuru",
+      "credit_limit": 60000.0,
+      "total_purchases": 89000.0
+    },
+    {
+      "id": "CUST-004",
+      "name": "Rajesh Rao",
+      "company": "Metro Retailers Pvt Ltd",
+      "phone": "+91 95432 10987",
+      "email": "rajesh@metroretail.in",
+      "city": "Bengaluru",
+      "credit_limit": 40000.0,
+      "total_purchases": 32400.0
+    },
+    {
+      "id": "CUST-005",
+      "name": "Sneha Patel",
+      "company": "Creator Studio",
+      "phone": "+91 94321 09876",
+      "email": "sneha.p@gmail.com",
+      "city": "Bengaluru",
+      "credit_limit": 15000.0,
+      "total_purchases": 9500.0
+    },
+    {
+      "id": "CUST-006",
+      "name": "Amit Deshmukh",
+      "company": "Zenith Coworking Hub",
+      "phone": "+91 93210 98765",
+      "email": "amit@zenithhub.in",
+      "city": "Bengaluru",
+      "credit_limit": 35000.0,
+      "total_purchases": 27600.0
+    },
+    {
+      "id": "CUST-007",
+      "name": "Kavita Menon",
+      "company": "Menon IT Consultancy",
+      "phone": "+91 92109 87654",
+      "email": "kavita@menonit.com",
+      "city": "Kochi",
+      "credit_limit": 45000.0,
+      "total_purchases": 18900.0
+    },
+    {
+      "id": "CUST-008",
+      "name": "Deepak Joshi",
+      "company": "Speedy Logistics Hub",
+      "phone": "+91 91098 76543",
+      "email": "deepak@speedylogistics.in",
+      "city": "Hubballi",
+      "credit_limit": 30000.0,
+      "total_purchases": 12400.0
+    }
+  ],
+  "orders": [
+    {
+      "id": "ORD-501",
+      "customer_id": "CUST-001",
+      "customer_name": "Rahul Verma",
+      "total_amount": 12500.0,
+      "payment_status": "Overdue",
+      "order_status": "Completed",
+      "channel": "WhatsApp",
+      "raw_message": "Hey Karthik, need 8 GaN fast chargers and 5 Type-C cables urgently.",
+      "created_at": "2026-08-15 23:44",
+      "items_json": "[{\"product_id\": \"PRD-102\", \"name\": \"65W Fast GaN Charger\", \"qty\": 8, \"price\": 1299.0}, {\"product_id\": \"PRD-103\", \"name\": \"100W Braided Type-C Cable\", \"qty\": 5, \"price\": 399.0}]"
+    },
+    {
+      "id": "ORD-502",
+      "customer_id": "CUST-002",
+      "customer_name": "Priya Nair",
+      "total_amount": 4800.0,
+      "payment_status": "Pending",
+      "order_status": "Processing",
+      "channel": "WhatsApp",
+      "raw_message": "Need 2 Boat earphones and 4 SanDisk 128GB cards for our event staff.",
+      "created_at": "2026-08-21 23:44",
+      "items_json": "[{\"product_id\": \"PRD-101\", \"name\": \"Boat BassHeads Earphones\", \"qty\": 2, \"price\": 699.0}, {\"product_id\": \"PRD-106\", \"name\": \"SanDisk 128GB MicroSD\", \"qty\": 4, \"price\": 849.0}]"
+    },
+    {
+      "id": "ORD-503",
+      "customer_id": "CUST-003",
+      "customer_name": "Vikram Singh",
+      "total_amount": 18900.0,
+      "payment_status": "Paid",
+      "order_status": "Completed",
+      "channel": "Online Store",
+      "raw_message": "Online store direct checkout",
+      "created_at": "2026-08-20 23:44",
+      "items_json": "[{\"product_id\": \"PRD-104\", \"name\": \"OnePlus Nord Buds 2 TWS\", \"qty\": 6, \"price\": 2499.0}, {\"product_id\": \"PRD-105\", \"name\": \"Fastrack Limitless Smartwatch\", \"qty\": 2, \"price\": 1999.0}]"
+    },
+    {
+      "id": "ORD-504",
+      "customer_id": "CUST-004",
+      "customer_name": "Rajesh Rao",
+      "total_amount": 8200.0,
+      "payment_status": "Overdue",
+      "order_status": "Completed",
+      "channel": "Phone Call",
+      "raw_message": "Phone order for replacement accessories",
+      "created_at": "2026-08-10 23:44",
+      "items_json": "[{\"product_id\": \"PRD-102\", \"name\": \"65W Fast GaN Charger\", \"qty\": 5, \"price\": 1299.0}, {\"product_id\": \"PRD-103\", \"name\": \"100W Braided Type-C Cable\", \"qty\": 4, \"price\": 399.0}]"
+    },
+    {
+      "id": "ORD-505",
+      "customer_id": "CUST-005",
+      "customer_name": "Sneha Patel",
+      "total_amount": 3499.0,
+      "payment_status": "Paid",
+      "order_status": "Completed",
+      "channel": "Walk-in",
+      "raw_message": "Walk-in customer sale",
+      "created_at": "2026-08-22 20:44",
+      "items_json": "[{\"product_id\": \"PRD-101\", \"name\": \"Boat BassHeads Earphones\", \"qty\": 1, \"price\": 699.0}, {\"product_id\": \"PRD-104\", \"name\": \"OnePlus Nord Buds 2 TWS\", \"qty\": 1, \"price\": 2499.0}]"
+    },
+    {
+      "id": "ORD-506",
+      "customer_id": "CUST-006",
+      "customer_name": "Amit Deshmukh",
+      "total_amount": 9495.0,
+      "payment_status": "Paid",
+      "order_status": "Completed",
+      "channel": "WhatsApp",
+      "raw_message": "Please send 5 power banks for our conference tomorrow.",
+      "created_at": "2026-08-19 23:44",
+      "items_json": "[{\"product_id\": \"PRD-107\", \"name\": \"Portronics 20000mAh Power Bank\", \"qty\": 5, \"price\": 1699.0}, {\"product_id\": \"PRD-103\", \"name\": \"100W Braided Type-C Cable\", \"qty\": 2, \"price\": 399.0}]"
+    },
+    {
+      "id": "ORD-507",
+      "customer_id": "CUST-007",
+      "customer_name": "Kavita Menon",
+      "total_amount": 15990.0,
+      "payment_status": "Pending",
+      "order_status": "Processing",
+      "channel": "Online Store",
+      "raw_message": "Web store order for office peripherals",
+      "created_at": "2026-08-22 15:44",
+      "items_json": "[{\"product_id\": \"PRD-109\", \"name\": \"JBL Go 3 Portable Speaker\", \"qty\": 3, \"price\": 2999.0}, {\"product_id\": \"PRD-105\", \"name\": \"Fastrack Limitless Smartwatch\", \"qty\": 3, \"price\": 1999.0}, {\"product_id\": \"PRD-108\", \"name\": \"Tempered Glass Screen Guard\", \"qty\": 5, \"price\": 199.0}]"
+    },
+    {
+      "id": "ORD-508",
+      "customer_id": "CUST-008",
+      "customer_name": "Deepak Joshi",
+      "total_amount": 5690.0,
+      "payment_status": "Overdue",
+      "order_status": "Completed",
+      "channel": "WhatsApp",
+      "raw_message": "Need 10 screen protectors and 2 fast chargers for dispatch drivers.",
+      "created_at": "2026-08-07 23:44",
+      "items_json": "[{\"product_id\": \"PRD-108\", \"name\": \"Tempered Glass Screen Guard\", \"qty\": 10, \"price\": 199.0}, {\"product_id\": \"PRD-102\", \"name\": \"65W Fast GaN Charger\", \"qty\": 2, \"price\": 1299.0}, {\"product_id\": \"PRD-110\", \"name\": \"Spigen Rugged Armor Phone Case\", \"qty\": 1, \"price\": 899.0}]"
+    }
+  ],
+  "invoices": [
+    {
+      "id": "INV-1024",
+      "order_id": "ORD-501",
+      "customer_id": "CUST-001",
+      "customer_name": "Rahul Verma (Sharma Tech Solutions)",
+      "amount": 12500.0,
+      "due_date": "2026-08-15",
+      "created_date": "2026-08-08",
+      "status": "Overdue",
+      "reminder_sent": 0,
+      "reminder_draft": "Dear Rahul, Invoice INV-1024 for ₹12,500 was due on 15 Aug (7 days overdue). Please settle at your earliest: upi://pay?pa=srilakshmi@icici&am=12500"
+    },
+    {
+      "id": "INV-1025",
+      "order_id": "ORD-502",
+      "customer_id": "CUST-002",
+      "customer_name": "Priya Nair (Greenfield Cafe)",
+      "amount": 4800.0,
+      "due_date": "2026-08-24",
+      "created_date": "2026-08-21",
+      "status": "Pending",
+      "reminder_sent": 0,
+      "reminder_draft": null
+    },
+    {
+      "id": "INV-1026",
+      "order_id": "ORD-503",
+      "customer_id": "CUST-003",
+      "customer_name": "Vikram Singh (Apex Digital)",
+      "amount": 18900.0,
+      "due_date": "2026-08-21",
+      "created_date": "2026-08-20",
+      "status": "Paid",
+      "reminder_sent": 0,
+      "reminder_draft": null
+    },
+    {
+      "id": "INV-1027",
+      "order_id": "ORD-504",
+      "customer_id": "CUST-004",
+      "customer_name": "Rajesh Rao (Metro Retailers)",
+      "amount": 8200.0,
+      "due_date": "2026-08-10",
+      "created_date": "2026-08-02",
+      "status": "Overdue",
+      "reminder_sent": 0,
+      "reminder_draft": "Hi Rajesh, Gentle reminder that invoice INV-1027 for ₹8,200 is 12 days overdue. Kindly process payment via UPI or NEFT today."
+    },
+    {
+      "id": "INV-1028",
+      "order_id": "ORD-505",
+      "customer_id": "CUST-005",
+      "customer_name": "Sneha Patel",
+      "amount": 3499.0,
+      "due_date": "2026-08-22",
+      "created_date": "2026-08-22",
+      "status": "Paid",
+      "reminder_sent": 0,
+      "reminder_draft": null
+    },
+    {
+      "id": "INV-1029",
+      "order_id": "ORD-506",
+      "customer_id": "CUST-006",
+      "customer_name": "Amit Deshmukh (Zenith Coworking)",
+      "amount": 9495.0,
+      "due_date": "2026-08-20",
+      "created_date": "2026-08-19",
+      "status": "Paid",
+      "reminder_sent": 0,
+      "reminder_draft": null
+    },
+    {
+      "id": "INV-1030",
+      "order_id": "ORD-507",
+      "customer_id": "CUST-007",
+      "customer_name": "Kavita Menon (Menon IT)",
+      "amount": 15990.0,
+      "due_date": "2026-08-27",
+      "created_date": "2026-08-22",
+      "status": "Pending",
+      "reminder_sent": 0,
+      "reminder_draft": null
+    },
+    {
+      "id": "INV-1031",
+      "order_id": "ORD-508",
+      "customer_id": "CUST-008",
+      "customer_name": "Deepak Joshi (Speedy Logistics)",
+      "amount": 5690.0,
+      "due_date": "2026-08-07",
+      "created_date": "2026-07-28",
+      "status": "Overdue",
+      "reminder_sent": 0,
+      "reminder_draft": "Dear Deepak, Invoice INV-1031 for ₹5,690 is 15 days overdue. Please settle immediately to avoid credit hold."
+    }
+  ],
+  "purchase_orders": [
+    {
+      "id": "PO-901",
+      "product_id": "PRD-101",
+      "product_name": "Boat BassHeads Earphones",
+      "supplier_id": "SUP-001",
+      "supplier_name": "ABC Electronics Distributors",
+      "quantity": 20,
+      "unit_cost": 425.0,
+      "total_cost": 8500.0,
+      "estimated_delivery_days": 2,
+      "status": "Pending Approval",
+      "created_at": "2026-08-22 22:59",
+      "approved_at": null
+    },
+    {
+      "id": "PO-902",
+      "product_id": "PRD-104",
+      "product_name": "OnePlus Nord Buds 2 TWS",
+      "supplier_id": "SUP-001",
+      "supplier_name": "ABC Electronics Distributors",
+      "quantity": 10,
+      "unit_cost": 1820.0,
+      "total_cost": 18200.0,
+      "estimated_delivery_days": 2,
+      "status": "Pending Approval",
+      "created_at": "2026-08-22 23:24",
+      "approved_at": null
+    },
+    {
+      "id": "PO-899",
+      "product_id": "PRD-106",
+      "product_name": "SanDisk 128GB High-Speed MicroSD",
+      "supplier_id": "SUP-004",
+      "supplier_name": "Reliance Digital Trade Mart",
+      "quantity": 30,
+      "unit_cost": 520.0,
+      "total_cost": 15600.0,
+      "estimated_delivery_days": 2,
+      "status": "Delivered",
+      "created_at": "2026-08-18 23:44",
+      "approved_at": "2026-08-18 23:44"
+    },
+    {
+      "id": "PO-900",
+      "product_id": "PRD-108",
+      "product_name": "Tempered Glass Screen Guard",
+      "supplier_id": "SUP-005",
+      "supplier_name": "Vardhaman Components",
+      "quantity": 100,
+      "unit_cost": 45.0,
+      "total_cost": 4500.0,
+      "estimated_delivery_days": 2,
+      "status": "Approved",
+      "created_at": "2026-08-21 23:44",
+      "approved_at": "2026-08-21 23:44"
+    }
+  ],
+  "approvals": [
+    {
+      "id": "APP-101",
+      "type": "Purchase Order",
+      "priority": "High",
+      "title": "Stockout Imminent: Reorder Boat BassHeads Earphones",
+      "description": "Current stock is 8 units. Avg sales: 6.0/day. Stock remaining: 1.33 days. Supplier delivery is 2-3 days. Reordering 20 units is vital to prevent stockout.",
+      "recommendation": "Recommended Supplier: ABC Electronics (₹425/unit, 2 days delivery, 96.5% reliability). Total cost: ₹8,500. Reject Apex DigiTech (₹410 but 5 days delivery guarantees stockout).",
+      "amount": 8500.0,
+      "reference_id": "PO-901",
+      "status": "Pending",
+      "metadata_json": "{\"product_id\": \"PRD-101\", \"product_name\": \"Boat BassHeads Earphones\", \"supplier_id\": \"SUP-001\", \"supplier_name\": \"ABC Electronics Distributors\", \"quantity\": 20, \"unit_price\": 425.0, \"lead_time_days\": 2, \"days_stock_remaining\": 1.33, \"comparison\": [{\"name\": \"ABC Electronics\", \"price\": 425, \"lead\": \"2 days\", \"reliability\": \"96.5%\", \"selected\": true, \"reason\": \"Fastest viable delivery before stockout\"}, {\"name\": \"Apex DigiTech\", \"price\": 410, \"lead\": \"5 days\", \"reliability\": \"85.0%\", \"selected\": false, \"reason\": \"Cheapest, but 5 days delivery guarantees stockout\"}, {\"name\": \"Sonic Distributors\", \"price\": 450, \"lead\": \"1 day\", \"reliability\": \"90.5%\", \"selected\": false, \"reason\": \"Higher unit cost (\\u20b9450)\"}]}",
+      "created_at": "2026-08-22 23:09",
+      "resolved_at": null
+    },
+    {
+      "id": "APP-102",
+      "type": "Payment Reminder",
+      "priority": "Medium",
+      "title": "Send Overdue Reminder to Rahul Verma (₹12,500)",
+      "description": "Invoice INV-1024 is 7 days overdue. Automatic polite payment reminder drafted for WhatsApp/Email.",
+      "recommendation": "Approve sending automated WhatsApp message with UPI payment link to Rahul Verma (+91 98765 43210).",
+      "amount": 12500.0,
+      "reference_id": "INV-1024",
+      "status": "Pending",
+      "metadata_json": "{\"invoice_id\": \"INV-1024\", \"customer_name\": \"Rahul Verma (Sharma Tech Solutions)\", \"amount\": 12500.0, \"days_overdue\": 7, \"phone\": \"+91 98765 43210\", \"message\": \"Dear Rahul, Invoice INV-1024 for \\u20b912,500 was due on 15 Aug (7 days overdue). Please click here to settle via UPI: upi://pay?pa=srilakshmi@icici&am=12500\"}",
+      "created_at": "2026-08-22 23:19",
+      "resolved_at": null
+    },
+    {
+      "id": "APP-103",
+      "type": "Purchase Order",
+      "priority": "High",
+      "title": "Critical Stock Alert: Reorder OnePlus Nord Buds 2 TWS",
+      "description": "Stock is down to 4 units. Daily demand is 2.5/day. Exhaustion in 1.6 days. Lead time is 2 days.",
+      "recommendation": "Recommended Supplier: ABC Electronics (₹1,820/unit, 2 days delivery, 96.5% score). Total cost: ₹18,200.",
+      "amount": 18200.0,
+      "reference_id": "PO-902",
+      "status": "Pending",
+      "metadata_json": "{\"product_id\": \"PRD-104\", \"product_name\": \"OnePlus Nord Buds 2 TWS\", \"supplier_id\": \"SUP-001\", \"supplier_name\": \"ABC Electronics Distributors\", \"quantity\": 10, \"unit_price\": 1820.0, \"lead_time_days\": 2, \"days_stock_remaining\": 1.6, \"comparison\": [{\"name\": \"ABC Electronics\", \"price\": 1820, \"lead\": \"2 days\", \"reliability\": \"96.5%\", \"selected\": true, \"reason\": \"Fast 2-day delivery prevents stockout\"}, {\"name\": \"Apex DigiTech\", \"price\": 1750, \"lead\": \"4 days\", \"reliability\": \"85.0%\", \"selected\": false, \"reason\": \"4 days lead time will exhaust stock\"}]}",
+      "created_at": "2026-08-22 23:29",
+      "resolved_at": null
+    },
+    {
+      "id": "APP-104",
+      "type": "Payment Reminder",
+      "priority": "High",
+      "title": "Escalate Overdue Invoice to Deepak Joshi (₹5,690)",
+      "description": "Invoice INV-1031 is 15 days overdue. Customer credit limit warning triggered.",
+      "recommendation": "Approve sending firm payment notice and placing account on temporary credit hold until clearance.",
+      "amount": 5690.0,
+      "reference_id": "INV-1031",
+      "status": "Pending",
+      "metadata_json": "{\"invoice_id\": \"INV-1031\", \"customer_name\": \"Deepak Joshi (Speedy Logistics)\", \"amount\": 5690.0, \"days_overdue\": 15, \"phone\": \"+91 91098 76543\"}",
+      "created_at": "2026-08-22 23:34",
+      "resolved_at": null
+    }
+  ],
+  "activity_logs": [
+    {
+      "id": 8,
+      "timestamp": "2026-08-22 22:49:49",
+      "time_display": "10:02 AM",
+      "category": "Orders",
+      "severity": "info",
+      "title": "New Customer Order Detected",
+      "detail": "Received WhatsApp inquiry from Sneha Patel for Boat Earphones and Nord Buds.",
+      "automated": 1
+    },
+    {
+      "id": 9,
+      "timestamp": "2026-08-22 22:51:49",
+      "time_display": "10:03 AM",
+      "category": "Inventory",
+      "severity": "success",
+      "title": "Live Inventory Verification",
+      "detail": "Extracted 2 items from message. Checked live stock: Both available. Auto-reserved units.",
+      "automated": 1
+    },
+    {
+      "id": 10,
+      "timestamp": "2026-08-22 22:54:49",
+      "time_display": "10:03 AM",
+      "category": "Orders",
+      "severity": "success",
+      "title": "Order Confirmed & Invoiced",
+      "detail": "Created Order ORD-505 (₹3,499) and generated Invoice INV-1028 automatically.",
+      "automated": 1
+    },
+    {
+      "id": 11,
+      "timestamp": "2026-08-22 22:59:49",
+      "time_display": "10:04 AM",
+      "category": "Inventory",
+      "severity": "urgent",
+      "title": "Critical Stockout Risk Flagged",
+      "detail": "Boat BassHeads Earphones stock dropped to 8 units. With 6.0/day sales rate, stock will exhaust in 1.33 days!",
+      "automated": 1
+    },
+    {
+      "id": 12,
+      "timestamp": "2026-08-22 23:04:49",
+      "time_display": "10:05 AM",
+      "category": "Suppliers",
+      "severity": "info",
+      "title": "Supplier Comparative Matrix Computed",
+      "detail": "Compared 3 approved suppliers for Boat Earphones. Selected ABC Electronics (₹425, 2 days, 96.5% score).",
+      "automated": 1
+    },
+    {
+      "id": 13,
+      "timestamp": "2026-08-22 23:09:49",
+      "time_display": "10:05 AM",
+      "category": "Approvals",
+      "severity": "warning",
+      "title": "Reorder PO Prepared (₹8,500)",
+      "detail": "Drafted Purchase Order PO-901 for 20 units. Submitted to Owner Approval Queue (High Priority).",
+      "automated": 1
+    },
+    {
+      "id": 14,
+      "timestamp": "2026-08-22 23:19:49",
+      "time_display": "10:06 AM",
+      "category": "Payments",
+      "severity": "warning",
+      "title": "Overdue Invoices Monitored",
+      "detail": "Identified 3 overdue invoices totalling ₹26,390. Drafted payment reminders.",
+      "automated": 1
+    },
+    {
+      "id": 15,
+      "timestamp": "2026-08-22 23:26:49",
+      "time_display": "10:12 AM",
+      "category": "Inventory",
+      "severity": "urgent",
+      "title": "OnePlus Nord Buds 2 TWS Low Stock Alert",
+      "detail": "Stock is 4 units (1.6 days buffer). Automatic PO-902 drafted for ₹18,200.",
+      "automated": 1
+    },
+    {
+      "id": 16,
+      "timestamp": "2026-08-22 23:34:49",
+      "time_display": "10:20 AM",
+      "category": "System",
+      "severity": "success",
+      "title": "Autonomous Operations Cycle Completed",
+      "detail": "All 10 SKUs, 8 active customer accounts, and 5 supplier channels verified.",
+      "automated": 1
+    }
+  ],
+  "agent_cognition": [
+    {
+      "id": 6,
+      "timestamp": "2026-08-22 22:58:49",
+      "stage": "CAPTURE",
+      "summary": "Ingested real-time inventory telemetry and sales velocity.",
+      "details": "Scanned 10 active SKUs across warehouse and sales counter."
+    },
+    {
+      "id": 7,
+      "timestamp": "2026-08-22 22:59:49",
+      "stage": "ANALYZE",
+      "summary": "Calculated Days-to-Stockout for all products.",
+      "details": "Detected PRD-101 (Boat Earphones) stock=8, avg_sales=6.0/day => 1.33 days remaining. Detected PRD-104 (Nord Buds) stock=4, avg_sales=2.5/day => 1.6 days remaining."
+    },
+    {
+      "id": 8,
+      "timestamp": "2026-08-22 23:02:49",
+      "stage": "PLAN",
+      "summary": "Synthesized optimal replenishment plans.",
+      "details": "Target reorders: 20 units PRD-101 and 10 units PRD-104 to maintain 15-day safety buffer without working capital strain."
+    },
+    {
+      "id": 9,
+      "timestamp": "2026-08-22 23:04:49",
+      "stage": "EVALUATE",
+      "summary": "Evaluated multi-vendor trade-offs.",
+      "details": "Ranked ABC Electronics #1 for both audio items due to 2-day SLA beating imminent stockouts."
+    },
+    {
+      "id": 10,
+      "timestamp": "2026-08-22 23:09:49",
+      "stage": "APPROVE",
+      "summary": "Awaiting Business Owner Authorization.",
+      "details": "Dispatched 4 interactive approval cards to Owner Dashboard (2 POs, 2 Payment Reminders)."
+    }
+  ]
+}

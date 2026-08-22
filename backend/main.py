@@ -84,6 +84,79 @@ def run_multi_agent_swarm_cycle():
     return agent_orchestrator.run_full_swarm_cycle()
 
 # -------------------------------------------------------------
+# Messaging Connectors (Telegram & WhatsApp Business)
+# -------------------------------------------------------------
+from backend.connectors.telegram_service import telegram_service
+from backend.connectors.whatsapp_service import whatsapp_service
+from fastapi import Request, Response
+
+class TelegramTestAlertRequest(BaseModel):
+    title: Optional[str] = "Critical Stockout Risk Alert"
+    description: Optional[str] = "Boat BassHeads Earphones will stockout in 1.33 days."
+    amount: Optional[float] = 8500.0
+    approval_id: Optional[str] = "APP-101"
+    reference_id: Optional[str] = "PO-901"
+
+class WhatsAppSendTestRequest(BaseModel):
+    to_phone: str
+    message: str
+
+@app.get("/api/connectors/status")
+def get_connectors_status():
+    """Returns live connection status for Telegram and WhatsApp."""
+    return {
+        "telegram": {
+            "configured": telegram_service.is_configured(),
+            "has_owner_chat_id": bool(telegram_service.owner_chat_id)
+        },
+        "whatsapp": {
+            "configured": whatsapp_service.is_configured(),
+            "phone_number_id": whatsapp_service.phone_number_id or None
+        }
+    }
+
+@app.post("/api/telegram/webhook")
+async def telegram_webhook(req: Request):
+    """Processes incoming Telegram updates (bot commands & button callbacks)."""
+    body = await req.json()
+    result = telegram_service.process_webhook_update(body)
+    return result
+
+@app.post("/api/telegram/send-test")
+def telegram_send_test(req: TelegramTestAlertRequest):
+    """Sends a test interactive approval alert to the owner Telegram."""
+    res = telegram_service.send_owner_approval_alert(
+        title=req.title,
+        description=req.description,
+        amount=req.amount,
+        approval_id=req.approval_id,
+        reference_id=req.reference_id
+    )
+    return res
+
+@app.get("/api/whatsapp/webhook")
+def whatsapp_verify_webhook(hub_mode: Optional[str] = None, hub_challenge: Optional[str] = None, hub_verify_token: Optional[str] = None):
+    """Meta WhatsApp Webhook verification handshake."""
+    from fastapi.responses import PlainTextResponse
+    challenge = whatsapp_service.verify_webhook(hub_mode or "", hub_verify_token or "", hub_challenge or "")
+    if challenge:
+        return PlainTextResponse(challenge)
+    raise HTTPException(status_code=403, detail="Verification failed")
+
+@app.post("/api/whatsapp/webhook")
+async def whatsapp_webhook(req: Request):
+    """Meta WhatsApp Webhook for incoming customer messages."""
+    body = await req.json()
+    result = whatsapp_service.process_incoming_webhook(body)
+    return result
+
+@app.post("/api/whatsapp/send-test")
+def whatsapp_send_test(req: WhatsAppSendTestRequest):
+    """Sends a test WhatsApp message."""
+    res = whatsapp_service.send_text_message(to_phone=req.to_phone, text=req.message)
+    return res
+
+# -------------------------------------------------------------
 # Operational Dashboard Endpoints
 # -------------------------------------------------------------
 

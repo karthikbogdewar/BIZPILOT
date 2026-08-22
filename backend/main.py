@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import os
 import json
+from datetime import datetime
 
 from backend.database import init_db, get_db_connection
 from backend.agent_engine import agent_service
@@ -337,6 +338,159 @@ def trigger_agent_scan():
     return result
 
 @app.post("/api/agent/command")
+class VoiceQueryRequest(BaseModel):
+    transcript: str
+    language: Optional[str] = "en"
+
+class WhatIfSimulationRequest(BaseModel):
+    demand_multiplier: Optional[float] = 1.0
+    lead_time_added_days: Optional[int] = 0
+    collection_delay_days: Optional[int] = 0
+
+@app.post("/api/invoices/{invoice_id}/pay-simulate")
+def simulate_invoice_payment(invoice_id: str):
+    """Simulates receiving a real-time UPI payment from customer for an invoice."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    inv = cursor.execute("SELECT * FROM invoices WHERE id = ?", (invoice_id,)).fetchone()
+    if not inv:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Invoice not found")
+
+    cursor.execute("UPDATE invoices SET status = 'Paid' WHERE id = ?", (invoice_id,))
+    if inv['order_id']:
+        cursor.execute("UPDATE orders SET payment_status = 'Paid' WHERE id = ?", (inv['order_id'],))
+
+    now = datetime.now()
+    cursor.execute("""
+        INSERT INTO activity_logs (timestamp, time_display, category, severity, title, detail, automated)
+        VALUES (?, ?, 'Finance', 'success', ?, ?, 1)
+    """, (
+        now.strftime('%Y-%m-%d %H:%M:%S'),
+        now.strftime('%I:%M %p'),
+        f"UPI Payment Received: {invoice_id}",
+        f"Customer {inv['customer_name']} paid ₹{inv['amount']:,.2f} via UPI. Invoice marked Paid and Cash Runway updated."
+    ))
+    conn.commit()
+    conn.close()
+
+    # Send receipt on WhatsApp/Telegram if available
+    whatsapp_service.send_text_message(
+        to_phone="919876543210",
+        text=f"✅ Payment of ₹{inv['amount']:,.2f} received for {invoice_id}. Thank you!"
+    )
+
+    return {
+        "success": True,
+        "invoice_id": invoice_id,
+        "amount": inv['amount'],
+        "customer_name": inv['customer_name'],
+        "status": "Paid",
+        "message": f"Successfully simulated UPI payment of ₹{inv['amount']:,.2f}!"
+    }
+
+@app.post("/api/ai/voice-query")
+def ai_voice_query(req: VoiceQueryRequest):
+    """Processes spoken voice questions, detects language, and formats text + voice audio script."""
+    from backend.agents.multilingual_agent import MultilingualAgent
+    ml = MultilingualAgent()
+    detected_lang = ml.detect_language(req.transcript)
+    
+    answer_text = agent_service.answer_command_query(req.transcript)
+
+    # Localized speech intro
+    intros = {
+        "en": "Here is your operations summary.",
+        "hi": "नमस्ते, यहाँ आपका बिज़नेस सारांश है।",
+        "te": "నమస్కారం, ఇది మీ వ్యాపార నివేదిక.",
+        "kn": "ನಮಸ್ಕಾರ, ಇದು ನಿಮ್ಮ ವ್ಯಾಪಾರ ವರದಿ.",
+        "ta": "வணக்கம், இதோ உங்கள் வணிக அறிக்கை."
+    }
+
+    voice_script = f"{intros.get(detected_lang, intros['en'])} {answer_text}"
+
+    return {
+        "transcript": req.transcript,
+        "detected_language": detected_lang,
+        "answer": answer_text,
+        "voice_script": voice_script
+    }
+
+@app.post("/api/simulator/what-if")
+def simulate_what_if_scenario(req: WhatIfSimulationRequest):
+    """
+    Digital Twin Stress Test Simulator:
+    Simulates festive demand surges (e.g. Diwali +200%), supplier delivery delays, and payment lags across all 10 SKUs.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    products = [dict(p) for p in cursor.execute("SELECT * FROM products").fetchall()]
+    suppliers = [dict(s) for s in cursor.execute("SELECT * FROM suppliers").fetchall()]
+    invoices = [dict(i) for i in cursor.execute("SELECT * FROM invoices").fetchall()]
+    conn.close()
+
+    multiplier = max(0.5, float(req.demand_multiplier or 1.0))
+    extra_lead = max(0, int(req.lead_time_added_days or 0))
+    extra_delay = max(0, int(req.collection_delay_days or 0))
+
+    simulation_results = []
+    total_contingency_cost = 0.0
+    critical_stockouts_count = 0
+
+    for p in products:
+        sim_sales_rate = round(p["avg_daily_sales"] * multiplier, 2)
+        sim_lead_time = p["lead_time_days"] + extra_lead
+        sim_days_to_stockout = round(p["stock"] / sim_sales_rate, 2) if sim_sales_rate > 0 else 999.0
+
+        is_critical = sim_days_to_stockout <= sim_lead_time
+        if is_critical:
+            critical_stockouts_count += 1
+            recommended_reorder = int((sim_sales_rate * (sim_lead_time + 7)) - p["stock"] + p["min_stock"])
+            recommended_reorder = max(10, recommended_reorder)
+            unit_cost = round(p["unit_price"] * 0.60, 2)
+            po_cost = round(recommended_reorder * unit_cost, 2)
+            total_contingency_cost += po_cost
+        else:
+            recommended_reorder = 0
+            po_cost = 0.0
+
+        simulation_results.append({
+            "product_id": p["id"],
+            "name": p["name"],
+            "current_stock": p["stock"],
+            "base_sales_rate": p["avg_daily_sales"],
+            "simulated_sales_rate": sim_sales_rate,
+            "simulated_lead_time_days": sim_lead_time,
+            "simulated_days_to_stockout": sim_days_to_stockout,
+            "risk_status": "CRITICAL" if is_critical else ("WARNING" if sim_days_to_stockout <= (sim_lead_time + 3) else "HEALTHY"),
+            "contingency_reorder_qty": recommended_reorder,
+            "contingency_po_cost": po_cost
+        })
+
+    # Sort by urgency
+    simulation_results.sort(key=lambda x: x["simulated_days_to_stockout"])
+
+    # Cash impact
+    current_cash = 185000.0
+    projected_receivables = sum(i["amount"] for i in invoices if i["status"] != "Paid")
+    simulated_runway_days = round((current_cash - total_contingency_cost) / (4500.0 * multiplier), 1)
+
+    return {
+        "simulation_parameters": {
+            "demand_multiplier": f"{int((multiplier - 1.0) * 100):+d}% (Factor {multiplier}x)",
+            "supplier_lead_time_added": f"+{extra_lead} days",
+            "collection_delay_added": f"+{extra_delay} days"
+        },
+        "summary": {
+            "critical_stockout_skus": critical_stockouts_count,
+            "total_contingency_po_budget_needed": total_contingency_cost,
+            "projected_cash_runway_days": simulated_runway_days,
+            "resilience_score": max(15, 100 - (critical_stockouts_count * 12) - (extra_lead * 4) - (extra_delay * 2)),
+            "verdict": "Urgent Pre-Orders Required" if critical_stockouts_count >= 3 else ("Moderate Buffer Recommended" if critical_stockouts_count > 0 else "Supply Chain Resilient")
+        },
+        "skus": simulation_results
+    }
+
 def ai_command_center(req: CommandQueryRequest):
     """AI natural language command center querying actual business database."""
     answer = agent_service.answer_command_query(req.query)

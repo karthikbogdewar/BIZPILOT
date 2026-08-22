@@ -55,13 +55,14 @@ function switchTab(tabId) {
   // Update page title
   const titleMap = {
     'dashboard': 'Operational Command Dashboard',
-    'agents-squad': 'Autonomous AI Agents Squad (4 Active Workers)',
+    'agents-squad': 'Autonomous AI Agents Squad (7 Active Workers)',
     'ai-agent': 'AI Agent Cognition & Command Center',
     'orders': 'Orders & WhatsApp Ingestion Channel',
     'inventory': 'Inventory & Stockout Prediction Engine',
     'invoices': 'Invoices & Accounts Receivable Tracking',
     'suppliers': 'Suppliers & Multi-Criteria Matrix',
     'approvals': 'Human-in-the-Loop Owner Approvals Queue',
+    'what-if': 'Supply Chain & Festive Surge "What-If" Digital Twin',
     'activity': 'Real-Time AI Activity & Audit Stream',
     'settings': 'Business Profile & Demo Settings'
   };
@@ -69,6 +70,7 @@ function switchTab(tabId) {
 
   // Trigger tab-specific refresh
   if (tabId === 'agents-squad') renderAgentsSquadPage();
+  if (tabId === 'what-if') runWhatIfSimulation();
   if (tabId === 'inventory') renderInventoryPage();
   if (tabId === 'orders') renderOrdersPage();
   if (tabId === 'invoices') renderInvoicesPage();
@@ -491,11 +493,19 @@ function renderInvoicesPage() {
         </span>
       </td>
       <td class="p-3.5 text-right">
-        ${isOverdue ? `
-          <button onclick="switchTab('approvals')" class="bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 border border-amber-500/40 text-xs px-2.5 py-1.5 rounded-lg transition font-semibold flex items-center gap-1 ml-auto cursor-pointer">
-            <i data-lucide="send" class="w-3 h-3"></i> Send Reminder
+        <div class="flex items-center justify-end gap-1.5">
+          <button onclick="openUpiModal('${inv.id}', ${inv.amount}, '${inv.customer_name}')" class="bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/30 text-[11px] px-2 py-1 rounded-lg transition font-semibold flex items-center gap-1 cursor-pointer" title="View Scannable UPI QR">
+            <i data-lucide="qr-code" class="w-3 h-3 text-emerald-400"></i> QR Pay
           </button>
-        ` : (inv.status === 'Paid' ? `<span class="text-emerald-400 text-xs font-mono">Settled</span>` : `<span class="text-slate-400 text-xs font-mono">Pending Maturity</span>`)}
+          <button onclick="openGstInvoiceModal('${inv.id}')" class="bg-teal-600/20 hover:bg-teal-600/40 text-teal-300 border border-teal-500/30 text-[11px] px-2 py-1 rounded-lg transition font-semibold flex items-center gap-1 cursor-pointer" title="View GST E-Invoice">
+            <i data-lucide="receipt" class="w-3 h-3 text-teal-400"></i> GST Bill
+          </button>
+          ${isOverdue ? `
+            <button onclick="switchTab('approvals')" class="bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 border border-amber-500/40 text-[11px] px-2 py-1 rounded-lg transition font-semibold flex items-center gap-1 cursor-pointer">
+              <i data-lucide="send" class="w-3 h-3"></i> Reminder
+            </button>
+          ` : ''}
+        </div>
       </td>
     `;
     tbody.appendChild(tr);
@@ -1544,5 +1554,359 @@ function setDashboardLanguage(lang) {
   }
 
   showToast('Language Updated', `Switched UI language to ${currentDashboardLanguage.toUpperCase()}`, 'info');
+}
+
+// -------------------------------------------------------------
+// 1. INDIC VOICE AI ASSISTANT (SPEECH-TO-TEXT & TTS)
+// -------------------------------------------------------------
+let voiceRecognition = null;
+let isVoiceListening = false;
+
+function toggleVoiceAssistant() {
+  if (isVoiceListening) {
+    stopVoiceAssistant();
+  } else {
+    startVoiceAssistant();
+  }
+}
+
+function startVoiceAssistant() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    showToast('Voice Notice', 'Speech Recognition is not supported on this browser. Try Chrome/Edge or type in AI Command Center.', 'warning');
+    return;
+  }
+
+  try {
+    voiceRecognition = new SpeechRecognition();
+    voiceRecognition.continuous = false;
+    voiceRecognition.interimResults = false;
+
+    // Map language code to speech locale
+    const langMap = {
+      'en': 'en-IN',
+      'hi': 'hi-IN',
+      'te': 'te-IN',
+      'kn': 'kn-IN',
+      'ta': 'ta-IN'
+    };
+    voiceRecognition.lang = langMap[currentDashboardLanguage] || 'en-IN';
+
+    voiceRecognition.onstart = () => {
+      isVoiceListening = true;
+      const btn = document.getElementById('voice-assistant-btn');
+      const text = document.getElementById('voice-btn-text');
+      const pulse = document.getElementById('voice-pulse-ring');
+      if (btn) btn.classList.add('bg-rose-600', 'text-white');
+      if (text) text.innerText = 'Listening...';
+      if (pulse) pulse.classList.remove('hidden');
+      showToast('Voice AI Listening', `Speak now in ${currentDashboardLanguage.toUpperCase()}...`, 'info');
+    };
+
+    voiceRecognition.onresult = async (event) => {
+      const transcript = event.results[0][0].transcript;
+      showToast('Voice Captured', `"${transcript}"`, 'success');
+      stopVoiceAssistant();
+
+      // Process voice query via backend
+      try {
+        const res = await fetch('/api/ai/voice-query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transcript, language: currentDashboardLanguage })
+        });
+        const data = await res.json();
+
+        // Switch to AI command center and show answer
+        switchTab('ai-agent');
+        const queryInput = document.getElementById('command-query-input');
+        if (queryInput) queryInput.value = transcript;
+
+        const container = document.getElementById('command-center-conversation');
+        if (container) {
+          const userMsg = document.createElement('div');
+          userMsg.className = 'p-3 bg-slate-800/80 border border-slate-700 rounded-xl text-xs text-white max-w-lg self-end ml-auto';
+          userMsg.innerHTML = `<span class="text-[10px] text-rose-400 font-mono block mb-1">🎙️ VOICE QUERY (${data.detected_language.toUpperCase()}):</span>${transcript}`;
+          container.appendChild(userMsg);
+
+          const aiMsg = document.createElement('div');
+          aiMsg.className = 'p-4 bg-brand-950/60 border border-brand-500/40 rounded-xl text-xs text-slate-200 max-w-xl self-start space-y-2';
+          aiMsg.innerHTML = `
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] text-emerald-400 font-mono font-bold">🤖 BIZPILOT AI VOICE ANSWER:</span>
+              <button onclick="speakText('${encodeURIComponent(data.voice_script)}')" class="text-brand-300 hover:text-white text-[10px] flex items-center gap-1 font-mono cursor-pointer">
+                <i data-lucide="volume-2" class="w-3 h-3"></i> Replay Voice
+              </button>
+            </div>
+            <p class="leading-relaxed text-white">${data.answer}</p>
+          `;
+          container.appendChild(aiMsg);
+          container.scrollTop = container.scrollHeight;
+          if (window.lucide) lucide.createIcons();
+        }
+
+        // Speak aloud using Browser Speech Synthesis
+        speakText(data.voice_script);
+
+      } catch (err) {
+        showToast('Voice Query Error', err.message, 'error');
+      }
+    };
+
+    voiceRecognition.onerror = (e) => {
+      console.warn('Speech recognition error:', e.error);
+      stopVoiceAssistant();
+      showToast('Voice Input Notice', `Microphone event: ${e.error}`, 'warning');
+    };
+
+    voiceRecognition.onend = () => {
+      stopVoiceAssistant();
+    };
+
+    voiceRecognition.start();
+  } catch (err) {
+    stopVoiceAssistant();
+    showToast('Voice Error', err.message, 'error');
+  }
+}
+
+function stopVoiceAssistant() {
+  isVoiceListening = false;
+  if (voiceRecognition) {
+    try { voiceRecognition.stop(); } catch(e) {}
+  }
+  const btn = document.getElementById('voice-assistant-btn');
+  const text = document.getElementById('voice-btn-text');
+  const pulse = document.getElementById('voice-pulse-ring');
+  if (btn) btn.classList.remove('bg-rose-600', 'text-white');
+  if (text) text.innerText = 'Voice AI';
+  if (pulse) pulse.classList.add('hidden');
+}
+
+function speakText(text) {
+  if (!window.speechSynthesis) return;
+  const decoded = decodeURIComponent(text);
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(decoded);
+  utterance.rate = 1.0;
+  utterance.pitch = 1.0;
+  window.speechSynthesis.speak(utterance);
+}
+
+// -------------------------------------------------------------
+// 2. "WHAT-IF" DIGITAL TWIN SIMULATOR ENGINE
+// -------------------------------------------------------------
+function updateWhatIfSliders() {
+  const demand = parseFloat(document.getElementById('slider-demand')?.value || 2.0);
+  const lead = parseInt(document.getElementById('slider-lead')?.value || 3);
+  const delay = parseInt(document.getElementById('slider-delay')?.value || 7);
+
+  const demandLabel = document.getElementById('slider-demand-val');
+  if (demandLabel) {
+    const pct = Math.round((demand - 1.0) * 100);
+    demandLabel.innerText = `${pct >= 0 ? '+' : ''}${pct}% (${demand}x)`;
+  }
+
+  const leadLabel = document.getElementById('slider-lead-val');
+  if (leadLabel) leadLabel.innerText = `+${lead} Days Delay`;
+
+  const delayLabel = document.getElementById('slider-delay-val');
+  if (delayLabel) delayLabel.innerText = `+${delay} Days Lag`;
+}
+
+async function runWhatIfSimulation() {
+  const demand = parseFloat(document.getElementById('slider-demand')?.value || 2.0);
+  const lead = parseInt(document.getElementById('slider-lead')?.value || 3);
+  const delay = parseInt(document.getElementById('slider-delay')?.value || 7);
+
+  try {
+    const res = await fetch('/api/simulator/what-if', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        demand_multiplier: demand,
+        lead_time_added_days: lead,
+        collection_delay_days: delay
+      })
+    });
+    const data = await res.json();
+
+    // Update KPIs
+    const s = data.summary;
+    const resScoreEl = document.getElementById('sim-kpi-resilience');
+    const resVerdictEl = document.getElementById('sim-kpi-verdict');
+    const resBarEl = document.getElementById('sim-kpi-bar');
+    const stockoutsEl = document.getElementById('sim-kpi-stockouts');
+    const budgetEl = document.getElementById('sim-kpi-budget');
+    const runwayEl = document.getElementById('sim-kpi-runway');
+
+    if (resScoreEl) resScoreEl.innerText = `${s.resilience_score}%`;
+    if (resVerdictEl) resVerdictEl.innerText = s.verdict;
+    if (resBarEl) resBarEl.style.width = `${s.resilience_score}%`;
+    if (stockoutsEl) stockoutsEl.innerText = `${s.critical_stockout_skus} / 10`;
+    if (budgetEl) budgetEl.innerText = `₹${s.total_contingency_po_budget_needed.toLocaleString('en-IN')}`;
+    if (runwayEl) runwayEl.innerText = `${s.projected_cash_runway_days} Days`;
+
+    // Populate SKU Table
+    const tbody = document.getElementById('whatif-skus-table-body');
+    if (tbody && data.skus) {
+      tbody.innerHTML = data.skus.map(sku => `
+        <tr class="${sku.risk_status === 'CRITICAL' ? 'bg-rose-950/20' : (sku.risk_status === 'WARNING' ? 'bg-amber-950/10' : '')}">
+          <td class="py-3 px-4 text-white font-semibold">${sku.name}</td>
+          <td class="py-3 px-4 font-mono text-slate-300">${sku.current_stock} units</td>
+          <td class="py-3 px-4 font-mono text-emerald-400 font-bold">${sku.simulated_sales_rate} /day</td>
+          <td class="py-3 px-4 font-mono text-slate-400">${sku.simulated_lead_time_days} days</td>
+          <td class="py-3 px-4 font-mono font-bold ${sku.simulated_days_to_stockout <= sku.simulated_lead_time_days ? 'text-rose-400' : 'text-slate-200'}">
+            ${sku.simulated_days_to_stockout} days
+          </td>
+          <td class="py-3 px-4">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+              sku.risk_status === 'CRITICAL' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' :
+              (sku.risk_status === 'WARNING' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30')
+            }">
+              ${sku.risk_status}
+            </span>
+          </td>
+          <td class="py-3 px-4 text-right font-mono font-bold text-amber-300">
+            ${sku.contingency_reorder_qty > 0 ? `+${sku.contingency_reorder_qty} units (₹${sku.contingency_po_cost.toLocaleString('en-IN')})` : '<span class="text-slate-500 font-normal">Sufficient</span>'}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    if (window.lucide) lucide.createIcons();
+  } catch (err) {
+    console.error('What-If simulation error:', err);
+  }
+}
+
+// -------------------------------------------------------------
+// 3. DYNAMIC SCANNABLE UPI QR MODAL & INSTANT RECONCILIATION
+// -------------------------------------------------------------
+let activeUpiInvoiceId = null;
+
+function openUpiModal(invId, amount, customerName) {
+  activeUpiInvoiceId = invId;
+  const modal = document.getElementById('upi-qr-modal');
+  const amountEl = document.getElementById('upi-modal-amount');
+  const invEl = document.getElementById('upi-modal-inv');
+  const qrContainer = document.getElementById('upi-qrcode-container');
+
+  if (amountEl) amountEl.innerText = `₹${parseFloat(amount).toLocaleString('en-IN')}`;
+  if (invEl) invEl.innerText = invId;
+
+  if (qrContainer) {
+    qrContainer.innerHTML = '';
+    const upiUri = `upi://pay?pa=bizpilot@icici&pn=Sri%20Lakshmi%20Electronics&am=${amount}&tr=${invId}&tn=Invoice%20Payment`;
+    if (window.QRCode) {
+      new QRCode(qrContainer, {
+        text: upiUri,
+        width: 180,
+        height: 180,
+        colorDark: "#0f172a",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
+  }
+
+  if (modal) modal.classList.remove('hidden');
+  if (window.lucide) lucide.createIcons();
+}
+
+function closeUpiModal() {
+  const modal = document.getElementById('upi-qr-modal');
+  if (modal) modal.classList.add('hidden');
+  activeUpiInvoiceId = null;
+}
+
+async function executeSimulatedInvoicePayment() {
+  if (!activeUpiInvoiceId) return;
+
+  try {
+    const res = await fetch(`/api/invoices/${activeUpiInvoiceId}/pay-simulate`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Payment Verified! 🎉', `₹${data.amount.toLocaleString('en-IN')} received via UPI for ${data.invoice_id}. Cash runway updated!`, 'success');
+      closeUpiModal();
+      await fetchAllData();
+      switchTab('invoices');
+    }
+  } catch (err) {
+    showToast('Payment Error', err.message, 'error');
+  }
+}
+
+// -------------------------------------------------------------
+// 4. PROFESSIONAL GST TAX E-INVOICE GENERATOR
+// -------------------------------------------------------------
+async function openGstInvoiceModal(invId) {
+  try {
+    const inv = (state.invoices || []).find(i => i.id === invId);
+    const order = (state.orders || []).find(o => o.id === inv?.order_id) || (state.orders && state.orders[0]) || {};
+
+    const modal = document.getElementById('gst-invoice-modal');
+    document.getElementById('gst-doc-inv-id').innerText = invId;
+    document.getElementById('gst-doc-date').innerText = inv ? inv.created_date : new Date().toLocaleDateString('en-GB');
+    document.getElementById('gst-doc-cust-name').innerText = inv ? inv.customer_name : 'Customer';
+    document.getElementById('gst-doc-cust-channel').innerText = `${order.channel || 'WhatsApp'} Channel / Order ${order.id || 'N/A'}`;
+    
+    const statusEl = document.getElementById('gst-doc-status');
+    if (statusEl && inv) {
+      statusEl.innerText = inv.status;
+      statusEl.className = inv.status === 'Paid' ? 
+        'bg-emerald-500/20 text-emerald-300 font-mono text-xs px-2 py-0.5 rounded font-bold border border-emerald-500/30' :
+        'bg-amber-500/20 text-amber-300 font-mono text-xs px-2 py-0.5 rounded font-bold border border-amber-500/30';
+    }
+
+    // Tax breakdown calculation
+    const taxRes = await fetch(`/api/agents/task`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        agent_id: 'agent_gst_tax',
+        task_name: 'calculate_gst_invoice_breakdown',
+        payload: { order_id: order.id, is_interstate: false }
+      })
+    });
+    const taxData = await taxRes.json();
+    const result = taxData.result || {};
+    const summary = result.summary || {};
+
+    document.getElementById('gst-doc-taxable').innerText = `₹${(summary.total_taxable_value || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+    document.getElementById('gst-doc-cgst').innerText = `₹${(summary.total_cgst || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+    document.getElementById('gst-doc-sgst').innerText = `₹${(summary.total_sgst || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+    document.getElementById('gst-doc-total').innerText = `₹${(summary.invoice_total || (inv ? inv.amount : 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+
+    const tbody = document.getElementById('gst-doc-items-tbody');
+    if (tbody) {
+      const items = result.items && result.items.length > 0 ? result.items : [
+        { name: 'Boat BassHeads Earphones', hsn: '85183000', quantity: 2, taxable_value: 1184.75, cgst: 106.63, sgst: 106.63, gross_amount: 1398.0 },
+        { name: '65W Fast GaN Charger (Type-C)', hsn: '85044090', quantity: 3, taxable_value: 3302.54, cgst: 297.23, sgst: 297.23, gross_amount: 3897.0 }
+      ];
+
+      tbody.innerHTML = items.map(it => `
+        <tr>
+          <td class="py-2.5 px-3 text-white">${it.name}</td>
+          <td class="py-2.5 px-3 font-mono text-slate-400">${it.hsn}</td>
+          <td class="py-2.5 px-3 text-center font-mono">${it.quantity}</td>
+          <td class="py-2.5 px-3 text-right font-mono">₹${it.taxable_value.toFixed(2)}</td>
+          <td class="py-2.5 px-3 text-right font-mono text-teal-400">₹${it.cgst.toFixed(2)}</td>
+          <td class="py-2.5 px-3 text-right font-mono text-teal-400">₹${it.sgst.toFixed(2)}</td>
+          <td class="py-2.5 px-3 text-right font-mono font-bold text-white">₹${it.gross_amount.toFixed(2)}</td>
+        </tr>
+      `).join('');
+    }
+
+    if (modal) modal.classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+  } catch (err) {
+    showToast('GST Bill Error', err.message, 'error');
+  }
+}
+
+function closeGstInvoiceModal() {
+  const modal = document.getElementById('gst-invoice-modal');
+  if (modal) modal.classList.add('hidden');
 }
 

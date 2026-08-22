@@ -10,6 +10,8 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- QRCode.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -140,6 +142,13 @@
             </div>
             <span id="nav-approvals-count" class="text-xs px-2 py-0.5 rounded-full bg-amber-500/30 text-amber-200 font-mono font-bold animate-pulse">2</span>
           </button>
+          <button onclick="switchTab('what-if')" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition group" data-tab="what-if">
+            <div class="flex items-center gap-3">
+              <i data-lucide="sparkles" class="w-4 h-4 text-purple-400 group-[.active]:text-purple-300"></i>
+              <span>What-If Digital Twin</span>
+            </div>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono font-bold border border-purple-500/30">Simulator</span>
+          </button>
           <button onclick="switchTab('activity')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition group" data-tab="activity">
             <i data-lucide="history" class="w-4 h-4 text-slate-400 group-[.active]:text-brand-400"></i>
             <span>AI Activity Log</span>
@@ -192,6 +201,16 @@
             <button onclick="setDashboardLanguage('kn')" id="lang-btn-kn" class="lang-btn px-2 py-1 rounded-md text-slate-400 hover:text-white transition cursor-pointer">ಕ</button>
             <button onclick="setDashboardLanguage('ta')" id="lang-btn-ta" class="lang-btn px-2 py-1 rounded-md text-slate-400 hover:text-white transition cursor-pointer">த</button>
           </div>
+
+          <!-- Indic Voice AI Assistant Button -->
+          <button onclick="toggleVoiceAssistant()" id="voice-assistant-btn" class="bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer relative" title="Speak to Voice AI in Telugu/Hindi/English">
+            <i data-lucide="mic" id="voice-mic-icon" class="w-3.5 h-3.5 text-rose-400"></i>
+            <span id="voice-btn-text">Voice AI</span>
+            <span id="voice-pulse-ring" class="hidden absolute -top-1 -right-1 flex h-2.5 w-2.5">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+            </span>
+          </button>
 
           <button onclick="dispatchTelegramDailyBriefing()" class="bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 border border-sky-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer" title="Send Daily Briefing to your Telegram">
             <i data-lucide="send" class="w-3.5 h-3.5 text-sky-400"></i>
@@ -1074,9 +1093,113 @@
           </button>
         </div>
 
-        <!-- 4 Agent Cards Grid -->
+        <!-- Interactive Visual Swarm Neural Network Topology Graph -->
+        <div class="p-6 rounded-2xl bg-surface-900 border border-slate-800 shadow-2xl space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+                <i data-lucide="network" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-sm text-white flex items-center gap-2">
+                  Autonomous Multi-Agent Topology & Neural Data Bus
+                  <span class="bg-indigo-500/20 text-indigo-300 text-[10px] px-2 py-0.5 rounded font-mono font-bold border border-indigo-500/30">Live Sync</span>
+                </h4>
+                <p class="text-[11px] text-slate-400">Real-time inter-agent messaging bus linking telemetry between all 7 specialized agents</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+              <span class="flex items-center gap-1 text-[11px] text-emerald-400 font-mono">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> 7 Connected Nodes
+              </span>
+            </div>
+          </div>
+
+          <!-- Interactive SVG/Canvas Topology Diagram -->
+          <div class="relative w-full h-[280px] bg-surface-950 rounded-xl border border-slate-800 overflow-hidden flex items-center justify-center">
+            <!-- Animated Background Grid Lines -->
+            <div class="absolute inset-0 bg-[linear-gradient(to_right,#1e293b15_1px,transparent_1px),linear-gradient(to_bottom,#1e293b15_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+
+            <svg class="absolute inset-0 w-full h-full" id="swarm-svg-canvas">
+              <!-- Animated Neural Laser Connection Lines -->
+              <line x1="50%" y1="50%" x2="20%" y2="25%" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="4,4" class="animate-pulse" opacity="0.6"/>
+              <line x1="50%" y1="50%" x2="50%" y2="15%" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4,4" class="animate-pulse" opacity="0.6"/>
+              <line x1="50%" y1="50%" x2="80%" y2="25%" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="4,4" class="animate-pulse" opacity="0.6"/>
+              <line x1="50%" y1="50%" x2="85%" y2="70%" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,4" class="animate-pulse" opacity="0.6"/>
+              <line x1="50%" y1="50%" x2="65%" y2="85%" stroke="#f43f5e" stroke-width="1.5" stroke-dasharray="4,4" class="animate-pulse" opacity="0.6"/>
+              <line x1="50%" y1="50%" x2="35%" y2="85%" stroke="#0ea5e9" stroke-width="1.5" stroke-dasharray="4,4" class="animate-pulse" opacity="0.6"/>
+              <line x1="50%" y1="50%" x2="15%" y2="70%" stroke="#14b8a6" stroke-width="1.5" stroke-dasharray="4,4" class="animate-pulse" opacity="0.6"/>
+            </svg>
+
+            <!-- Central Swarm Orchestrator Node -->
+            <div class="absolute z-10 flex flex-col items-center cursor-pointer group" onclick="triggerMultiAgentSwarmCycle()" style="left: calc(50% - 40px); top: calc(50% - 40px);">
+              <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex flex-col items-center justify-center text-white shadow-2xl shadow-brand-500/50 border-2 border-brand-300 transform group-hover:scale-105 transition">
+                <i data-lucide="cpu" class="w-6 h-6 animate-pulse"></i>
+                <span class="text-[9px] font-bold mt-1 font-mono uppercase tracking-wider">Swarm Core</span>
+              </div>
+            </div>
+
+            <!-- Node 1: Inventory Sentinel (Top Center) -->
+            <div class="absolute z-10 flex flex-col items-center cursor-pointer group" onclick="runAgentTaskLive('agent_inventory', 'scan_stockout_risks')" style="left: calc(50% - 32px); top: 15px;">
+              <div class="w-14 h-14 rounded-xl bg-surface-900 border border-amber-500/60 text-amber-400 flex items-center justify-center shadow-lg group-hover:border-amber-400 transition">
+                <i data-lucide="boxes" class="w-5 h-5"></i>
+              </div>
+              <span class="text-[10px] text-slate-300 font-semibold mt-1 bg-surface-900/90 px-1.5 py-0.5 rounded border border-slate-800">Inventory</span>
+            </div>
+
+            <!-- Node 2: Procurement (Top Right) -->
+            <div class="absolute z-10 flex flex-col items-center cursor-pointer group" onclick="runAgentTaskLive('agent_procurement', 'draft_purchase_order', {product_id: 'PRD-101'})" style="left: calc(80% - 28px); top: 25px;">
+              <div class="w-14 h-14 rounded-xl bg-surface-900 border border-indigo-500/60 text-indigo-400 flex items-center justify-center shadow-lg group-hover:border-indigo-400 transition">
+                <i data-lucide="truck" class="w-5 h-5"></i>
+              </div>
+              <span class="text-[10px] text-slate-300 font-semibold mt-1 bg-surface-900/90 px-1.5 py-0.5 rounded border border-slate-800">Procurement</span>
+            </div>
+
+            <!-- Node 3: Sales (Bottom Right) -->
+            <div class="absolute z-10 flex flex-col items-center cursor-pointer group" onclick="openWhatsAppSimulatorModal()" style="left: calc(85% - 28px); top: 175px;">
+              <div class="w-14 h-14 rounded-xl bg-surface-900 border border-emerald-500/60 text-emerald-400 flex items-center justify-center shadow-lg group-hover:border-emerald-400 transition">
+                <i data-lucide="message-square" class="w-5 h-5"></i>
+              </div>
+              <span class="text-[10px] text-slate-300 font-semibold mt-1 bg-surface-900/90 px-1.5 py-0.5 rounded border border-slate-800">WhatsApp</span>
+            </div>
+
+            <!-- Node 4: Cash Flow (Bottom Right-Center) -->
+            <div class="absolute z-10 flex flex-col items-center cursor-pointer group" onclick="runAgentTaskLive('agent_cashflow', 'audit_receivables')" style="left: calc(65% - 28px); top: 205px;">
+              <div class="w-14 h-14 rounded-xl bg-surface-900 border border-rose-500/60 text-rose-400 flex items-center justify-center shadow-lg group-hover:border-rose-400 transition">
+                <i data-lucide="receipt" class="w-5 h-5"></i>
+              </div>
+              <span class="text-[10px] text-slate-300 font-semibold mt-1 bg-surface-900/90 px-1.5 py-0.5 rounded border border-slate-800">Cash Flow</span>
+            </div>
+
+            <!-- Node 5: Multilingual (Bottom Left-Center) -->
+            <div class="absolute z-10 flex flex-col items-center cursor-pointer group" onclick="runAgentTaskLive('agent_multilingual', 'detect_and_parse_multilingual_message', {message: 'Bhaiya 2 boat earphones bhej do'})" style="left: calc(35% - 28px); top: 205px;">
+              <div class="w-14 h-14 rounded-xl bg-surface-900 border border-sky-500/60 text-sky-400 flex items-center justify-center shadow-lg group-hover:border-sky-400 transition">
+                <i data-lucide="languages" class="w-5 h-5"></i>
+              </div>
+              <span class="text-[10px] text-slate-300 font-semibold mt-1 bg-surface-900/90 px-1.5 py-0.5 rounded border border-slate-800">Multilingual</span>
+            </div>
+
+            <!-- Node 6: GST Tax (Bottom Left) -->
+            <div class="absolute z-10 flex flex-col items-center cursor-pointer group" onclick="runAgentTaskLive('agent_gst_tax', 'generate_monthly_gst_summary')" style="left: calc(15% - 28px); top: 175px;">
+              <div class="w-14 h-14 rounded-xl bg-surface-900 border border-teal-500/60 text-teal-400 flex items-center justify-center shadow-lg group-hover:border-teal-400 transition">
+                <i data-lucide="calculator" class="w-5 h-5"></i>
+              </div>
+              <span class="text-[10px] text-slate-300 font-semibold mt-1 bg-surface-900/90 px-1.5 py-0.5 rounded border border-slate-800">GST Tax</span>
+            </div>
+
+            <!-- Node 7: CEO Briefing (Top Left) -->
+            <div class="absolute z-10 flex flex-col items-center cursor-pointer group" onclick="dispatchTelegramDailyBriefing()" style="left: calc(20% - 28px); top: 25px;">
+              <div class="w-14 h-14 rounded-xl bg-surface-900 border border-purple-500/60 text-purple-400 flex items-center justify-center shadow-lg group-hover:border-purple-400 transition">
+                <i data-lucide="briefcase" class="w-5 h-5"></i>
+              </div>
+              <span class="text-[10px] text-slate-300 font-semibold mt-1 bg-surface-900/90 px-1.5 py-0.5 rounded border border-slate-800">CEO Brief</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7 Agent Cards Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="agents-grid-container">
-          <!-- Dynamically populated or rendered via JS -->
+          <!-- Dynamically populated via JS -->
         </div>
 
         <!-- Live Agent Execution & Output Console -->
@@ -1096,6 +1219,158 @@
   "agents_registered": 4,
   "ready_for_execution": true
 }
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 11: WHAT-IF DIGITAL TWIN SIMULATOR -->
+      <div id="view-what-if" class="tab-view hidden p-6 space-y-6 max-w-7xl mx-auto">
+        <!-- Header Banner -->
+        <div class="p-6 rounded-2xl bg-gradient-to-r from-purple-950 via-surface-900 to-indigo-950 border border-purple-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30 border border-purple-400/40 shrink-0">
+              <i data-lucide="sparkles" class="w-8 h-8"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-xl font-bold text-white">Supply Chain & Festive Surge "What-If" Digital Twin</h3>
+                <span class="bg-purple-500/20 text-purple-300 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold border border-purple-500/30 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span> Predictive AI Engine
+                </span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1 max-w-2xl">
+                Stress-test your business against upcoming festive rushes (e.g. Diwali +300% sales), vendor strikes, and collection delays before they happen.
+              </p>
+            </div>
+          </div>
+          <button onclick="runWhatIfSimulation()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-purple-500/25 transition cursor-pointer shrink-0">
+            <i data-lucide="play" class="w-4 h-4 text-amber-300 fill-current"></i>
+            <span>Simulate Stress Test</span>
+          </button>
+        </div>
+
+        <!-- Interactive Stress Test Control Sliders -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <!-- Slider 1: Festive Demand Surge -->
+          <div class="p-5 rounded-2xl bg-surface-900 border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                <i data-lucide="trending-up" class="w-4 h-4 text-emerald-400"></i> Festive Demand Surge
+              </span>
+              <span id="slider-demand-val" class="font-mono font-bold text-xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">+100% (2.0x)</span>
+            </div>
+            <p class="text-[11px] text-slate-400">Simulate customer buying spikes during Diwali, Big Billion Days, or seasonal rush.</p>
+            <input type="range" id="slider-demand" min="0.5" max="4.0" step="0.25" value="2.0" oninput="updateWhatIfSliders(); runWhatIfSimulation();" class="w-full accent-emerald-500 cursor-pointer">
+            <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+              <span>-50% (Slow)</span>
+              <span>Baseline (1x)</span>
+              <span>+300% (Diwali Surge)</span>
+            </div>
+          </div>
+
+          <!-- Slider 2: Supplier Lead Time Delay -->
+          <div class="p-5 rounded-2xl bg-surface-900 border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                <i data-lucide="truck" class="w-4 h-4 text-amber-400"></i> Supplier Delay (Days)
+              </span>
+              <span id="slider-lead-val" class="font-mono font-bold text-xs text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">+3 Days Delay</span>
+            </div>
+            <p class="text-[11px] text-slate-400">Simulate logistics bottlenecks, transport strikes, or component shortages.</p>
+            <input type="range" id="slider-lead" min="0" max="14" step="1" value="3" oninput="updateWhatIfSliders(); runWhatIfSimulation();" class="w-full accent-amber-500 cursor-pointer">
+            <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+              <span>0 Days (On-Time)</span>
+              <span>+7 Days</span>
+              <span>+14 Days (Severe)</span>
+            </div>
+          </div>
+
+          <!-- Slider 3: Customer Payment Lag -->
+          <div class="p-5 rounded-2xl bg-surface-900 border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-4 h-4 text-rose-400"></i> Payment Collection Lag
+              </span>
+              <span id="slider-delay-val" class="font-mono font-bold text-xs text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">+7 Days Lag</span>
+            </div>
+            <p class="text-[11px] text-slate-400">Simulate wholesale clients defaulting or delaying invoice clearances.</p>
+            <input type="range" id="slider-delay" min="0" max="30" step="2" value="7" oninput="updateWhatIfSliders(); runWhatIfSimulation();" class="w-full accent-rose-500 cursor-pointer">
+            <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+              <span>0 Days</span>
+              <span>+14 Days</span>
+              <span>+30 Days</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Simulation Executive KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="whatif-kpi-container">
+          <!-- Resilience Score -->
+          <div class="p-4 rounded-2xl bg-surface-900 border border-slate-800 flex flex-col justify-between">
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Supply Chain Resilience</span>
+            <div class="my-2 flex items-baseline gap-2">
+              <span class="text-3xl font-bold font-mono text-purple-400" id="sim-kpi-resilience">78%</span>
+              <span class="text-xs text-slate-400 font-medium" id="sim-kpi-verdict">Moderate Buffer</span>
+            </div>
+            <div class="w-full bg-surface-950 rounded-full h-1.5 overflow-hidden">
+              <div id="sim-kpi-bar" class="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full" style="width: 78%"></div>
+            </div>
+          </div>
+
+          <!-- Stockouts Threat -->
+          <div class="p-4 rounded-2xl bg-surface-900 border border-slate-800 flex flex-col justify-between">
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">SKUs at Stockout Threat</span>
+            <div class="my-2">
+              <span class="text-3xl font-bold font-mono text-rose-400" id="sim-kpi-stockouts">3 / 10</span>
+            </div>
+            <p class="text-[11px] text-rose-400/80">Will exhaust before delivery</p>
+          </div>
+
+          <!-- Contingency Budget Needed -->
+          <div class="p-4 rounded-2xl bg-surface-900 border border-slate-800 flex flex-col justify-between">
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Contingency PO Budget</span>
+            <div class="my-2">
+              <span class="text-3xl font-bold font-mono text-amber-400" id="sim-kpi-budget">₹42,500</span>
+            </div>
+            <p class="text-[11px] text-slate-400">Pre-order capital required</p>
+          </div>
+
+          <!-- Projected Cash Runway -->
+          <div class="p-4 rounded-2xl bg-surface-900 border border-slate-800 flex flex-col justify-between">
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Simulated Cash Runway</span>
+            <div class="my-2">
+              <span class="text-3xl font-bold font-mono text-emerald-400" id="sim-kpi-runway">28.5 Days</span>
+            </div>
+            <p class="text-[11px] text-emerald-400">Solvent cash buffer</p>
+          </div>
+        </div>
+
+        <!-- SKU Level Simulation Table -->
+        <div class="p-6 rounded-2xl bg-surface-900 border border-slate-800 shadow-xl">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="font-bold text-sm text-white flex items-center gap-2">
+              <i data-lucide="layers" class="w-4 h-4 text-purple-400"></i> SKU Impact Matrix & Auto-Drafted Contingency Orders
+            </h4>
+            <span class="text-xs text-slate-400 font-mono">10 SKUs Evaluated</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-surface-950 text-slate-400 uppercase tracking-wider text-[10px] border-b border-slate-800">
+                <tr>
+                  <th class="py-3 px-4">Product Name</th>
+                  <th class="py-3 px-4">Stock</th>
+                  <th class="py-3 px-4">Sim. Sales/Day</th>
+                  <th class="py-3 px-4">Lead Time</th>
+                  <th class="py-3 px-4">Days to Stockout</th>
+                  <th class="py-3 px-4">Risk Level</th>
+                  <th class="py-3 px-4 text-right">Contingency PO</th>
+                </tr>
+              </thead>
+              <tbody id="whatif-skus-table-body" class="divide-y divide-slate-800/60 font-medium">
+                <!-- Dynamically populated via JS -->
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -1212,6 +1487,140 @@
         <button onclick="closeAgentSpecModal()" class="bg-slate-800 hover:bg-slate-700 text-white font-medium px-4 py-2 rounded-xl text-xs transition">
           Close Inspector
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: DYNAMIC SCANNABLE UPI QR CODE & INSTANT RECONCILIATION -->
+  <div id="upi-qr-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-surface-900 border border-slate-700 rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col text-center p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+            <i data-lucide="qr-code" class="w-4 h-4"></i>
+          </div>
+          <h4 class="font-bold text-sm text-white">UPI Instant Payment</h4>
+        </div>
+        <button onclick="closeUpiModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Dynamic QR Canvas Container -->
+      <div class="bg-white p-4 rounded-2xl mx-auto shadow-inner flex flex-col items-center justify-center w-56 h-56">
+        <div id="upi-qrcode-container"></div>
+      </div>
+
+      <div>
+        <span class="text-xs text-slate-400 block">Total Amount to Pay</span>
+        <div class="text-2xl font-bold font-mono text-white mt-0.5" id="upi-modal-amount">₹3,795.00</div>
+        <span class="text-[11px] text-slate-400 font-mono mt-1 block">Invoice: <strong class="text-slate-200" id="upi-modal-inv">INV-1001</strong> | UPI ID: <strong class="text-emerald-400">bizpilot@icici</strong></span>
+      </div>
+
+      <div class="pt-2 flex flex-col gap-2">
+        <button id="upi-simulate-pay-btn" onclick="executeSimulatedInvoicePayment()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 transition cursor-pointer">
+          <i data-lucide="zap" class="w-4 h-4 text-amber-300 fill-current"></i>
+          <span>⚡ Simulate Customer Paid via UPI</span>
+        </button>
+        <button onclick="closeUpiModal()" class="w-full bg-surface-950 hover:bg-slate-800 text-slate-400 hover:text-white py-2 px-4 rounded-xl text-xs transition">
+          Dismiss
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: PROFESSIONAL GST TAX E-INVOICE GENERATOR -->
+  <div id="gst-invoice-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-surface-900 border border-slate-700 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+      <!-- Header -->
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-surface-950">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="receipt" class="w-5 h-5 text-teal-400"></i>
+          <h4 class="font-bold text-sm text-white">GST Tax Invoice & E-Way Receipt</h4>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
+            <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print / PDF
+          </button>
+          <button onclick="closeGstInvoiceModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable Invoice Paper Body -->
+      <div class="p-6 overflow-y-auto space-y-6 text-xs text-slate-300 bg-surface-950 font-sans" id="gst-invoice-paper">
+        <!-- Business & Customer Info Header -->
+        <div class="flex flex-col sm:flex-row justify-between gap-4 border-b border-slate-800 pb-6">
+          <div>
+            <span class="text-[10px] uppercase font-bold text-brand-400 tracking-wider">Seller Details</span>
+            <h3 class="text-lg font-bold text-white mt-1">Sri Lakshmi Electronics</h3>
+            <p class="text-slate-400 text-xs">#42, 1st Cross, Commercial Street, Bengaluru - 560001</p>
+            <p class="text-slate-400 text-xs font-mono mt-0.5">GSTIN: <strong class="text-slate-200">29AAAAA0000A1Z5</strong> | PAN: ABCDE1234F</p>
+          </div>
+          <div class="text-left sm:text-right">
+            <span class="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">Tax Invoice</span>
+            <div class="text-base font-bold font-mono text-white mt-1" id="gst-doc-inv-id">INV-7623</div>
+            <p class="text-slate-400 text-xs mt-0.5">Date: <span id="gst-doc-date">23 Aug 2026</span></p>
+            <p class="text-slate-400 text-xs">Place of Supply: <strong>Karnataka (29)</strong></p>
+          </div>
+        </div>
+
+        <!-- Billed To -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="p-3 bg-surface-900 rounded-xl border border-slate-800">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Billed To (Customer)</span>
+            <strong class="text-white text-xs block" id="gst-doc-cust-name">BHANU REDDY</strong>
+            <span class="text-slate-400 text-[11px] block" id="gst-doc-cust-channel">WhatsApp Channel / Verified Account</span>
+          </div>
+          <div class="p-3 bg-surface-900 rounded-xl border border-slate-800">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Payment Status</span>
+            <span id="gst-doc-status" class="bg-amber-500/20 text-amber-300 font-mono text-xs px-2 py-0.5 rounded font-bold border border-amber-500/30">Pending</span>
+            <span class="text-[11px] text-slate-400 block mt-1">Mode: Instant UPI (bizpilot@icici)</span>
+          </div>
+        </div>
+
+        <!-- Items Table -->
+        <div class="border border-slate-800 rounded-xl overflow-hidden">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-surface-900 text-slate-400 uppercase tracking-wider text-[10px]">
+              <tr>
+                <th class="py-2.5 px-3">Item Description</th>
+                <th class="py-2.5 px-3 font-mono">HSN Code</th>
+                <th class="py-2.5 px-3 text-center">Qty</th>
+                <th class="py-2.5 px-3 text-right">Taxable Val</th>
+                <th class="py-2.5 px-3 text-right">CGST (9%)</th>
+                <th class="py-2.5 px-3 text-right">SGST (9%)</th>
+                <th class="py-2.5 px-3 text-right">Total (₹)</th>
+              </tr>
+            </thead>
+            <tbody id="gst-doc-items-tbody" class="divide-y divide-slate-800/60 font-medium">
+              <!-- Dynamically populated via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Totals & Summary -->
+        <div class="flex justify-end pt-2">
+          <div class="w-64 space-y-1.5 text-xs">
+            <div class="flex justify-between text-slate-400">
+              <span>Total Taxable Amount:</span>
+              <span class="font-mono text-slate-200" id="gst-doc-taxable">₹3,216.10</span>
+            </div>
+            <div class="flex justify-between text-slate-400">
+              <span>CGST (9%):</span>
+              <span class="font-mono text-slate-200" id="gst-doc-cgst">₹289.45</span>
+            </div>
+            <div class="flex justify-between text-slate-400">
+              <span>SGST (9%):</span>
+              <span class="font-mono text-slate-200" id="gst-doc-sgst">₹289.45</span>
+            </div>
+            <div class="flex justify-between pt-2 border-t border-slate-800 text-sm font-bold text-white">
+              <span>Grand Total:</span>
+              <span class="font-mono text-emerald-400" id="gst-doc-total">₹3,795.00</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

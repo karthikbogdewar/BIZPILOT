@@ -1,0 +1,101 @@
+/* BizPilot AI Custom Stylesheet */
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(99, 102, 241, 0.4);
+  }
+}
+
+.agent-active-glow {
+  animation: pulseGlow 3s infinite ease-in-out;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #090d16;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Sidebar Active Nav Button */
+.nav-btn.active {
+  background-color: rgba(99, 102, 241, 0.15);
+  color: #ffffff;
+  border-left: 3px solid #6366f1;
+}
+
+/* Cognition Pipeline Step Animation */
+.cognition-step {
+  transition: all 0.3s ease;
+}
+
+.cognition-step.active {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+}
+
+/* Table Hover Effect */
+tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+tbody tr:hover {
+  background-color: rgba(30, 41, 59, 0.5);
+}
+
+/* Markdown Formatted AI Chat Output */
+.ai-formatted-chat h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #e0e7ff;
+  margin-top: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.ai-formatted-chat h4 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #c7d2fe;
+  margin-top: 0.4rem;
+  margin-bottom: 0.25rem;
+}
+
+.ai-formatted-chat p {
+  margin-bottom: 0.4rem;
+  line-height: 1.5;
+}
+
+.ai-formatted-chat ul {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.ai-formatted-chat li {
+  margin-bottom: 0.25rem;
+}
+
+.ai-formatted-chat code {
+  background-color: #0f172a;
+  color: #a5b4fc;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}

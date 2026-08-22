@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BizPilot AI – Small Business Back-Office Agent</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            },
+            surface: {
+              950: '#090d16',
+              900: '#0f172a',
+              850: '#141e33',
+              800: '#1e293b',
+              700: '#334155',
+            }
+          },
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-surface-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- TOP NOTIFICATION BANNER -->
+  <div id="top-agent-bar" class="bg-gradient-to-r from-brand-900/60 via-surface-900 to-indigo-950/80 border-b border-brand-500/20 px-4 py-2 text-xs flex items-center justify-between z-30">
+    <div class="flex items-center gap-2">
+      <span class="relative flex h-2.5 w-2.5">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+      </span>
+      <span class="font-semibold text-emerald-400">BizPilot Autonomous Agent Online</span>
+      <span class="text-slate-400 hidden sm:inline">|</span>
+      <span class="text-slate-300 hidden md:inline">Continuously monitoring inventory, WhatsApp orders, overdue payments & suppliers for <strong class="text-white">Sri Lakshmi Electronics</strong></span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-slate-400 text-[11px] hidden sm:inline" id="last-sync-time">Last scan: Just now</span>
+      <button onclick="triggerOperationsScan()" class="bg-brand-600/30 hover:bg-brand-600/50 text-brand-300 border border-brand-500/30 px-2.5 py-1 rounded-md text-[11px] font-medium transition flex items-center gap-1.5 cursor-pointer">
+        <i data-lucide="refresh-cw" class="w-3 h-3"></i> Scan Now
+      </button>
+    </div>
+  </div>
+
+  <div class="flex flex-1 overflow-hidden">
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="w-64 bg-surface-900/90 border-r border-slate-800/80 flex flex-col justify-between shrink-0 z-20 transition-all duration-200">
+      <div>
+        <!-- Brand Header -->
+        <div class="p-5 border-b border-slate-800/80 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center shadow-lg shadow-brand-500/20 border border-brand-400/30">
+            <i data-lucide="bot" class="w-5 h-5 text-white"></i>
+          </div>
+          <div>
+            <div class="font-bold text-base tracking-tight text-white flex items-center gap-1.5">
+              BizPilot AI
+              <span class="bg-brand-500/20 text-brand-300 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold uppercase border border-brand-500/30">Ops</span>
+            </div>
+            <p class="text-xs text-slate-400 font-medium">Digital Ops Employee</p>
+          </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="p-3 space-y-1 text-sm font-medium">
+          <button onclick="switchTab('dashboard')" class="nav-btn active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition group" data-tab="dashboard">
+            <i data-lucide="layout-dashboard" class="w-4 h-4 text-slate-400 group-[.active]:text-brand-400"></i>
+            <span>Dashboard</span>
+          </button>
+          <button onclick="switchTab('ai-agent')" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition group" data-tab="ai-agent">
+            <div class="flex items-center gap-3">
+              <i data-lucide="cpu" class="w-4 h-4 text-slate-400 group-[.active]:text-brand-400"></i>
+              <span>AI Command Center</span>
+            </div>
+            <span class="flex h-2 w-2 relative">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+            </span>
+          </button>
+          <button onclick="switchTab('orders')" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition group" data-tab="orders">
+            <div class="flex items-center gap-3">
+              <i data-lucide="shopping-bag" class="w-4 h-4 text-slate-400 group-[.active]:text-brand-400"></i>
+              <span>Orders & WhatsApp</span>
+            </div>
+            <span id="nav-orders-count" class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono">5</span>
+          </button>
+          <button onclick="switchTab('inventory')" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition group" data-tab="inventory">
+            <div class="flex items-center gap-3">
+              <i data-lucide="boxes" class="w-4 h-4 text-slate-400 group-[.active]:text-brand-400"></i>
+              <span>Inventory & Stockout</span>
+            </div>
+            <span id="nav-stockout-badge" class="text-xs px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-mono font-bold border border-rose-500/30">1 Risk</span>
+          </button>
+          <button onclick="switchTab('invoices')" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition group" data-tab="invoices">
+            <div class="flex items-center gap-3">
+              <i data-lucide="receipt" class="w-4 h-4 text-slate-400 group-[.active]:text-brand-400"></i>
+              <span>Invoices & Payments</span>
+            </div>
+            <span id="nav-overdue-count" class="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono border border-amber-500/30">2 Overdue</span>
+          </button>
+          <button onclick="switchTab('suppliers')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition group" data-tab="suppliers">
+            <i data-lucide="truck" class="w-4 h-4 text-slate-400 group-[.active]:text-brand-400"></i>
+            <span>Suppliers & Matrix</span>
+          </button>
+          <button onclick="switchTab('approvals')" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition group" data-tab="approvals">
+            <div class="flex items-center gap-3">
+              <i data-lucide="shield-alert" class="w-4 h-4 text-slate-400 group-[.active]:text-brand-400"></i>
+              <span>Owner Approvals</span>
+            </div>
+            <span id="nav-approvals-count" class="text-xs px-2 py-0.5 rounded-full bg-amber-500/30 text-amber-200 font-mono font-bold animate-pulse">2</span>
+          </button>
+          <button onclick="switchTab('activity')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition group" data-tab="activity">
+            <i data-lucide="history" class="w-4 h-4 text-slate-400 group-[.active]:text-brand-400"></i>
+            <span>AI Activity Log</span>
+          </button>
+          <button onclick="switchTab('settings')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition group" data-tab="settings">
+            <i data-lucide="settings-2" class="w-4 h-4 text-slate-400 group-[.active]:text-brand-400"></i>
+            <span>Business Settings</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Quick Demo Launcher Card in Sidebar -->
+      <div class="p-3 m-3 rounded-xl bg-gradient-to-b from-slate-800/90 to-surface-900 border border-slate-700/60 text-xs">
+        <div class="flex items-center gap-2 mb-1.5 text-brand-300 font-semibold">
+          <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+          <span>Hackathon Demo Mode</span>
+        </div>
+        <p class="text-slate-400 text-[11px] mb-3 leading-relaxed">Run the official Sri Lakshmi Electronics stockout & reorder agent sequence.</p>
+        <button onclick="runHackathonDemoScenario()" class="w-full bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-medium py-2 px-3 rounded-lg shadow-md shadow-brand-500/20 text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+          <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i> Launch 1-Click Demo
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 flex flex-col overflow-y-auto bg-surface-950">
+      
+      <!-- TOP HEADER BAR -->
+      <header class="bg-surface-900/60 backdrop-blur-md border-b border-slate-800/80 px-6 py-3.5 flex items-center justify-between sticky top-0 z-10">
+        <div class="flex items-center gap-3">
+          <div class="flex flex-col">
+            <h1 id="page-title" class="text-lg font-bold text-white flex items-center gap-2">
+              Operational Command Dashboard
+            </h1>
+            <span class="text-xs text-slate-400 flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              Business: <strong class="text-slate-200 font-semibold" id="header-business-name">Sri Lakshmi Electronics</strong>
+              <span class="text-slate-500">|</span> Owner: <span id="header-owner-name" class="text-slate-300">Karthik Sharma</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Quick Action Buttons -->
+        <div class="flex items-center gap-2.5">
+          <button onclick="openWhatsAppSimulatorModal()" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
+            <i data-lucide="message-square" class="w-3.5 h-3.5 text-emerald-400"></i>
+            <span>Simulate WhatsApp Order</span>
+          </button>
+          
+          <button onclick="switchTab('approvals')" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer relative">
+            <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>Approvals Queue</span>
+            <span id="header-approval-pill" class="ml-1 bg-amber-500 text-slate-950 px-1.5 py-0.2 rounded-full font-bold text-[10px]">2</span>
+          </button>
+
+          <button onclick="runHackathonDemoScenario()" class="bg-brand-600 hover:bg-brand-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-brand-500/20 transition cursor-pointer">
+            <i data-lucide="zap" class="w-3.5 h-3.5 fill-current text-amber-300"></i>
+            <span>1-Click Demo</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- TAB 1: DASHBOARD VIEW -->
+      <div id="view-dashboard" class="tab-view p-6 space-y-6">
+        
+        <!-- TOP STATISTICS CARDS (6 KPIS) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+          <!-- Total Orders -->
+          <div class="bg-surface-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-xs font-medium uppercase tracking-wider">Total Orders</span>
+              <div class="p-2 rounded-lg bg-indigo-500/10 text-indigo-400"><i data-lucide="shopping-cart" class="w-4 h-4"></i></div>
+            </div>
+            <div>
+              <div class="text-2xl font-bold text-white font-mono" id="stat-total-orders">5</div>
+              <p class="text-[11px] text-emerald-400 mt-1 flex items-center gap-1"><i data-lucide="trending-up" class="w-3 h-3"></i> +3 today</p>
+            </div>
+          </div>
+
+          <!-- Pending Orders -->
+          <div class="bg-surface-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-xs font-medium uppercase tracking-wider">Pending Orders</span>
+              <div class="p-2 rounded-lg bg-amber-500/10 text-amber-400"><i data-lucide="clock" class="w-4 h-4"></i></div>
+            </div>
+            <div>
+              <div class="text-2xl font-bold text-white font-mono" id="stat-pending-orders">1</div>
+              <p class="text-[11px] text-slate-400 mt-1">Awaiting dispatch</p>
+            </div>
+          </div>
+
+          <!-- Low Stock Products -->
+          <div class="bg-surface-900 border border-rose-900/40 rounded-xl p-4 flex flex-col justify-between hover:border-rose-700/60 transition bg-gradient-to-b from-rose-950/20 to-surface-900">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-xs font-medium uppercase tracking-wider text-rose-300">Low Stock SKUs</span>
+              <div class="p-2 rounded-lg bg-rose-500/20 text-rose-400"><i data-lucide="alert-triangle" class="w-4 h-4"></i></div>
+            </div>
+            <div>
+              <div class="text-2xl font-bold text-rose-400 font-mono" id="stat-low-stock">1</div>
+              <p class="text-[11px] text-rose-300 font-medium mt-1">🔴 Stockout in 1.3 days</p>
+            </div>
+          </div>
+
+          <!-- Outstanding Payments -->
+          <div class="bg-surface-900 border border-amber-900/40 rounded-xl p-4 flex flex-col justify-between hover:border-amber-700/60 transition">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-xs font-medium uppercase tracking-wider text-amber-300">Receivables</span>
+              <div class="p-2 rounded-lg bg-amber-500/20 text-amber-400"><i data-lucide="receipt" class="w-4 h-4"></i></div>
+            </div>
+            <div>
+              <div class="text-2xl font-bold text-amber-300 font-mono" id="stat-outstanding-payments">₹25,500</div>
+              <p class="text-[11px] text-amber-400 mt-1">2 Overdue accounts</p>
+            </div>
+          </div>
+
+          <!-- Today's Revenue -->
+          <div class="bg-surface-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-xs font-medium uppercase tracking-wider text-slate-300">Today's Revenue</span>
+              <div class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400"><i data-lucide="indian-rupee" class="w-4 h-4"></i></div>
+            </div>
+            <div>
+              <div class="text-2xl font-bold text-white font-mono" id="stat-today-revenue">₹43,099</div>
+              <p class="text-[11px] text-emerald-400 mt-1 flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> 100% verified</p>
+            </div>
+          </div>
+
+          <!-- Tasks Auto Completed -->
+          <div class="bg-surface-900 border border-emerald-900/40 rounded-xl p-4 flex flex-col justify-between hover:border-emerald-700/60 transition bg-gradient-to-b from-emerald-950/20 to-surface-900">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-xs font-medium uppercase tracking-wider text-emerald-300">Auto Completed</span>
+              <div class="p-2 rounded-lg bg-emerald-500/20 text-emerald-400"><i data-lucide="bot" class="w-4 h-4"></i></div>
+            </div>
+            <div>
+              <div class="text-2xl font-bold text-emerald-400 font-mono" id="stat-auto-tasks">18</div>
+              <p class="text-[11px] text-emerald-300 mt-1">Saved ~3.5 hrs manual work</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TRI-COLOR PRIORITY HUB -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- 🔴 URGENT SECTION -->
+          <div class="bg-surface-900/90 border border-rose-900/40 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+              <div class="flex items-center gap-2">
+                <span class="flex h-3 w-3 relative">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+                </span>
+                <h2 class="font-bold text-sm text-rose-300 tracking-wide uppercase">🔴 URGENT ATTENTION</h2>
+              </div>
+              <span id="urgent-badge-count" class="text-xs font-mono bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2 py-0.5 rounded-full font-bold">2 Items</span>
+            </div>
+            
+            <div id="urgent-items-list" class="space-y-3">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- 🟡 NEEDS APPROVAL SECTION -->
+          <div class="bg-surface-900/90 border border-amber-900/40 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+              <div class="flex items-center gap-2">
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-amber-400"></span>
+                <h2 class="font-bold text-sm text-amber-300 tracking-wide uppercase">🟡 NEEDS OWNER APPROVAL</h2>
+              </div>
+              <span id="needs-approval-badge-count" class="text-xs font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold">2 Pending</span>
+            </div>
+            
+            <div id="needs-approval-items-list" class="space-y-3">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- 🟢 AUTOMATICALLY HANDLED SECTION -->
+          <div class="bg-surface-900/90 border border-emerald-900/40 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+              <div class="flex items-center gap-2">
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-400"></span>
+                <h2 class="font-bold text-sm text-emerald-300 tracking-wide uppercase">🟢 AUTOMATICALLY HANDLED</h2>
+              </div>
+              <span class="text-xs font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">Autopilot Active</span>
+            </div>
+            
+            <div id="auto-handled-items-list" class="space-y-3 text-xs">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- DAILY AI SUMMARY & AI RECOMMENDATION -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Daily AI Report -->
+          <div class="lg:col-span-2 bg-gradient-to-r from-surface-900 via-surface-900 to-brand-950/40 border border-slate-800 rounded-2xl p-6 relative">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2.5">
+                <div class="p-2 rounded-xl bg-brand-500/20 text-brand-400 border border-brand-500/30">
+                  <i data-lucide="file-text" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <h3 class="font-bold text-white text-base">Today's Daily Business AI Summary</h3>
+                  <p class="text-xs text-slate-400">Executive operations status synthesized by BizPilot AI</p>
+                </div>
+              </div>
+              <button onclick="triggerOperationsScan()" class="text-xs text-brand-400 hover:text-brand-300 font-medium flex items-center gap-1 transition">
+                <i data-lucide="refresh-cw" class="w-3 h-3"></i> Refresh Report
+              </button>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-5 text-xs">
+              <div class="bg-surface-950/60 p-3 rounded-xl border border-slate-800">
+                <span class="text-slate-400 block mb-1">Orders Processed</span>
+                <span class="text-lg font-bold text-white font-mono" id="daily-orders-count">5</span>
+              </div>
+              <div class="bg-surface-950/60 p-3 rounded-xl border border-slate-800">
+                <span class="text-slate-400 block mb-1">Low-Stock Risks</span>
+                <span class="text-lg font-bold text-rose-400 font-mono" id="daily-lowstock-count">1</span>
+              </div>
+              <div class="bg-surface-950/60 p-3 rounded-xl border border-slate-800">
+                <span class="text-slate-400 block mb-1">Overdue Invoices</span>
+                <span class="text-lg font-bold text-amber-400 font-mono" id="daily-overdue-count">2</span>
+              </div>
+              <div class="bg-surface-950/60 p-3 rounded-xl border border-slate-800">
+                <span class="text-slate-400 block mb-1">Supplier Issues</span>
+                <span class="text-lg font-bold text-slate-300 font-mono">0</span>
+              </div>
+              <div class="bg-surface-950/60 p-3 rounded-xl border border-slate-800">
+                <span class="text-slate-400 block mb-1">Tasks Auto Done</span>
+                <span class="text-lg font-bold text-emerald-400 font-mono" id="daily-auto-count">18</span>
+              </div>
+              <div class="bg-surface-950/60 p-3 rounded-xl border border-slate-800">
+                <span class="text-slate-400 block mb-1">Owner Decisions Needed</span>
+                <span class="text-lg font-bold text-amber-300 font-mono" id="daily-decisions-count">2</span>
+              </div>
+            </div>
+
+            <!-- Proactive Recommendation Banner -->
+            <div class="bg-brand-950/40 border border-brand-500/30 rounded-xl p-4 flex items-start gap-3.5">
+              <div class="p-2 rounded-lg bg-brand-500/20 text-brand-300 shrink-0 mt-0.5">
+                <i data-lucide="sparkles" class="w-4 h-4"></i>
+              </div>
+              <div class="text-xs">
+                <h4 class="font-bold text-brand-200 mb-1 flex items-center gap-2">
+                  Top Priority AI Recommendation:
+                  <span class="bg-rose-500/30 text-rose-200 px-2 py-0.5 rounded text-[10px] font-mono uppercase font-bold border border-rose-500/40">Critical</span>
+                </h4>
+                <p class="text-slate-300 leading-relaxed" id="daily-top-recommendation">
+                  "Your highest priority today is <strong>Boat BassHeads Earphones</strong> replenishment because current stock (8 units) will exhaust in <strong>1.33 days</strong> at 6.0/day sales rate, which is shorter than supplier delivery."
+                </p>
+                <div class="mt-3 flex items-center gap-3">
+                  <button onclick="switchTab('approvals')" class="bg-brand-600 hover:bg-brand-500 text-white px-3 py-1.5 rounded-lg font-semibold text-xs transition flex items-center gap-1 cursor-pointer">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Review & Approve PO (₹8,500)
+                  </button>
+                  <button onclick="switchTab('suppliers')" class="text-slate-300 hover:text-white text-xs underline cursor-pointer">
+                    Compare Suppliers
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Activity Mini Feed -->
+          <div class="bg-surface-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                  <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i> Live Agent Actions
+                </h3>
+                <button onclick="switchTab('activity')" class="text-xs text-brand-400 hover:underline">View All</button>
+              </div>
+              <div id="dashboard-mini-logs" class="space-y-2.5 text-xs">
+                <!-- Rendered via JS -->
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+              <span>Auto-Pilot Status: <strong class="text-emerald-400 font-semibold">Enabled</strong></span>
+              <button onclick="openWhatsAppSimulatorModal()" class="text-brand-400 hover:text-brand-300 font-medium">Test Order Ingestion &rarr;</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHARTS SECTION: REVENUE & INVENTORY HEALTH -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-surface-900 border border-slate-800 rounded-2xl p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                <i data-lucide="bar-chart-3" class="w-4 h-4 text-brand-400"></i> Sales Velocity vs Stock Remaining
+              </h3>
+              <span class="text-xs text-slate-400 font-mono">Real-time DB</span>
+            </div>
+            <div class="h-60">
+              <canvas id="inventoryHealthChart"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-surface-900 border border-slate-800 rounded-2xl p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                <i data-lucide="pie-chart" class="w-4 h-4 text-indigo-400"></i> Order Channels & Automation Breakdown
+              </h3>
+              <span class="text-xs text-emerald-400 font-medium flex items-center gap-1">
+                <i data-lucide="zap" class="w-3 h-3"></i> 82% Autonomous
+              </span>
+            </div>
+            <div class="h-60 flex items-center justify-center">
+              <canvas id="orderChannelChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB 2: AI AGENT / COMMAND CENTER -->
+      <div id="view-ai-agent" class="tab-view hidden p-6 space-y-6">
+        
+        <!-- AGENT COGNITIVE PIPELINE TRACKER -->
+        <div class="bg-surface-900 border border-slate-800 rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+                <i data-lucide="git-branch" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-white text-base">BizPilot Proactive Cognitive Architecture</h3>
+                <p class="text-xs text-slate-400">Continuous 8-Stage Autonomous Operations Loop</p>
+              </div>
+            </div>
+            <button onclick="triggerOperationsScan()" class="bg-brand-600 hover:bg-brand-500 text-white text-xs px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition">
+              <i data-lucide="play" class="w-3.5 h-3.5"></i> Run Cognitive Cycle
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 text-xs text-center font-medium my-4">
+            <div class="cognition-step active p-2.5 rounded-xl border border-indigo-500/40 bg-indigo-950/40 text-indigo-300">
+              <span class="block text-[10px] uppercase font-mono text-indigo-400 font-bold mb-0.5">1. CAPTURE</span>
+              <span class="text-[11px]">Orders / WhatsApp</span>
+            </div>
+            <div class="cognition-step active p-2.5 rounded-xl border border-indigo-500/40 bg-indigo-950/40 text-indigo-300">
+              <span class="block text-[10px] uppercase font-mono text-indigo-400 font-bold mb-0.5">2. UNDERSTAND</span>
+              <span class="text-[11px]">NLP Item Match</span>
+            </div>
+            <div class="cognition-step active p-2.5 rounded-xl border border-indigo-500/40 bg-indigo-950/40 text-indigo-300">
+              <span class="block text-[10px] uppercase font-mono text-indigo-400 font-bold mb-0.5">3. REMEMBER</span>
+              <span class="text-[11px]">DB State & SLA</span>
+            </div>
+            <div class="cognition-step active p-2.5 rounded-xl border border-indigo-500/40 bg-indigo-950/40 text-indigo-300">
+              <span class="block text-[10px] uppercase font-mono text-indigo-400 font-bold mb-0.5">4. ANALYZE</span>
+              <span class="text-[11px]">Stockout / Cashflow</span>
+            </div>
+            <div class="cognition-step active p-2.5 rounded-xl border border-indigo-500/40 bg-indigo-950/40 text-indigo-300">
+              <span class="block text-[10px] uppercase font-mono text-indigo-400 font-bold mb-0.5">5. PLAN</span>
+              <span class="text-[11px]">Supplier Selection</span>
+            </div>
+            <div class="cognition-step active p-2.5 rounded-xl border border-emerald-500/40 bg-emerald-950/40 text-emerald-300">
+              <span class="block text-[10px] uppercase font-mono text-emerald-400 font-bold mb-0.5">6. EXECUTE</span>
+              <span class="text-[11px]">Auto Order / Invoice</span>
+            </div>
+            <div class="cognition-step active p-2.5 rounded-xl border border-amber-500/40 bg-amber-950/40 text-amber-300">
+              <span class="block text-[10px] uppercase font-mono text-amber-400 font-bold mb-0.5">7. APPROVE</span>
+              <span class="text-[11px]">Human Authorization</span>
+            </div>
+            <div class="cognition-step active p-2.5 rounded-xl border border-indigo-500/40 bg-indigo-950/40 text-indigo-300">
+              <span class="block text-[10px] uppercase font-mono text-indigo-400 font-bold mb-0.5">8. FOLLOW-UP</span>
+              <span class="text-[11px]">Dispatches & Sync</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- INTERACTIVE NATURAL LANGUAGE COMMAND CENTER (GROUNDED IN DB) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Chat Interface -->
+          <div class="lg:col-span-2 bg-surface-900 border border-slate-800 rounded-2xl flex flex-col h-[520px]">
+            <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="p-2 rounded-lg bg-brand-500/20 text-brand-400">
+                  <i data-lucide="terminal" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold text-white text-sm">Interactive AI Operations Command</h4>
+                  <p class="text-[11px] text-slate-400">Queries stored database facts without hallucination</p>
+                </div>
+              </div>
+              <span class="text-[11px] text-emerald-400 font-mono flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+                Grounded Engine Active
+              </span>
+            </div>
+
+            <!-- Chat History Area -->
+            <div id="ai-chat-messages" class="flex-1 p-4 overflow-y-auto space-y-3.5 text-xs">
+              <!-- Initial Welcome Message -->
+              <div class="flex items-start gap-3">
+                <div class="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center text-white shrink-0 mt-0.5">
+                  <i data-lucide="bot" class="w-4 h-4"></i>
+                </div>
+                <div class="bg-surface-800 border border-slate-700/60 rounded-2xl rounded-tl-none p-3.5 max-w-[85%] text-slate-200 space-y-2">
+                  <p>Hello Karthik! I am your <strong>BizPilot Back-Office Operations Agent</strong> for <strong>Sri Lakshmi Electronics</strong>.</p>
+                  <p class="text-slate-300">I have analyzed your real-time business telemetry:</p>
+                  <ul class="list-disc pl-4 space-y-1 text-slate-300">
+                    <li>🔴 <strong>1 Critical Stockout Risk:</strong> Boat BassHeads Earphones (1.33 days remaining)</li>
+                    <li>🟡 <strong>2 Pending Approvals:</strong> ₹8,500 PO & Overdue WhatsApp Reminder</li>
+                    <li>💳 <strong>2 Overdue Invoices:</strong> ₹20,700 total receivables</li>
+                  </ul>
+                  <p class="text-brand-300 font-medium">Click any prompt chip below or type your question:</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Prompt Suggestions Chips -->
+            <div class="px-4 py-2 bg-surface-950/50 border-t border-slate-800 flex items-center gap-2 overflow-x-auto text-[11px]">
+              <span class="text-slate-400 shrink-0">Try asking:</span>
+              <button onclick="sendQuickCommand('Which products are at risk?')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded-full whitespace-nowrap transition cursor-pointer border border-slate-700">
+                ⚠️ Which products are at risk?
+              </button>
+              <button onclick="sendQuickCommand('Why is Boat Earphones showing a stockout warning?')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded-full whitespace-nowrap transition cursor-pointer border border-slate-700">
+                🔍 Why is Boat Earphones at risk?
+              </button>
+              <button onclick="sendQuickCommand('Compare suppliers for Boat Earphones')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded-full whitespace-nowrap transition cursor-pointer border border-slate-700">
+                📊 Compare suppliers for Boat Earphones
+              </button>
+              <button onclick="sendQuickCommand('Show overdue payments')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded-full whitespace-nowrap transition cursor-pointer border border-slate-700">
+                💳 Show overdue payments
+              </button>
+              <button onclick="sendQuickCommand('What should I focus on today?')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded-full whitespace-nowrap transition cursor-pointer border border-slate-700">
+                🎯 What should I focus on today?
+              </button>
+            </div>
+
+            <!-- Input Box -->
+            <div class="p-3 bg-surface-900 border-t border-slate-800">
+              <form id="ai-command-form" onsubmit="handleCommandSubmit(event)" class="flex items-center gap-2">
+                <input type="text" id="ai-command-input" placeholder="Ask anything about inventory, suppliers, overdue payments, or orders..." class="flex-1 bg-surface-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 transition">
+                <button type="submit" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shrink-0">
+                  <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                  <span>Execute</span>
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Real-Time Cognition Stream -->
+          <div class="bg-surface-900 border border-slate-800 rounded-2xl p-4 flex flex-col h-[520px]">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
+              <h4 class="font-bold text-white text-xs flex items-center gap-2">
+                <i data-lucide="brain-circuit" class="w-4 h-4 text-brand-400"></i> Active Thought Log
+              </h4>
+              <span class="text-[10px] font-mono text-slate-400">Live Agent Cognition</span>
+            </div>
+            
+            <div id="cognition-stream-list" class="flex-1 overflow-y-auto space-y-2.5 text-xs pr-1">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- TAB 3: ORDERS & WHATSAPP SIMULATOR -->
+      <div id="view-orders" class="tab-view hidden p-6 space-y-6">
+        
+        <!-- WhatsApp Simulator Banner -->
+        <div class="bg-gradient-to-r from-emerald-950/60 via-surface-900 to-surface-900 border border-emerald-500/30 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center shrink-0">
+              <i data-lucide="message-circle" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-white text-base flex items-center gap-2">
+                Simulated Customer WhatsApp Ingestion
+                <span class="bg-emerald-500/20 text-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-mono border border-emerald-500/30">NLP Auto-Parser</span>
+              </h3>
+              <p class="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                Test how the AI reads unstructured customer messages (e.g. <em>"I need 10 Boat earphones and 5 chargers"</em>), checks inventory in real-time, auto-confirms safe orders, generates invoices, and flags stock shortages.
+              </p>
+            </div>
+          </div>
+          <button onclick="openWhatsAppSimulatorModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-emerald-600/20 transition cursor-pointer shrink-0">
+            <i data-lucide="send" class="w-4 h-4"></i>
+            <span>Test Customer Message</span>
+          </button>
+        </div>
+
+        <!-- Orders Table Card -->
+        <div class="bg-surface-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
+          <div class="p-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <h3 class="font-bold text-white text-sm">Customer Orders & Fulfillment Ledger</h3>
+              <span class="text-xs text-slate-400 font-mono">(Live SQLite)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="text" id="order-search-input" onkeyup="filterOrdersTable()" placeholder="Search customer or order ID..." class="bg-surface-950 border border-slate-700 text-xs text-white rounded-lg px-3 py-1.5 focus:outline-none focus:border-brand-500">
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-surface-950 text-slate-400 uppercase font-mono text-[11px] border-b border-slate-800">
+                <tr>
+                  <th class="p-3.5">Order ID</th>
+                  <th class="p-3.5">Customer</th>
+                  <th class="p-3.5">Channel</th>
+                  <th class="p-3.5">Items Ordered</th>
+                  <th class="p-3.5">Total Amount</th>
+                  <th class="p-3.5">Payment</th>
+                  <th class="p-3.5">Fulfillment</th>
+                  <th class="p-3.5">Date</th>
+                </tr>
+              </thead>
+              <tbody id="orders-table-body" class="divide-y divide-slate-800">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB 4: INVENTORY & STOCKOUT PREDICTOR -->
+      <div id="view-inventory" class="tab-view hidden p-6 space-y-6">
+        
+        <!-- Inventory Risk Alert Banner -->
+        <div class="bg-gradient-to-r from-rose-950/60 via-surface-900 to-surface-900 border border-rose-500/30 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center justify-center shrink-0">
+              <i data-lucide="alert-octagon" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-white text-base flex items-center gap-2">
+                Predictive Stockout Forecasting Engine
+                <span class="bg-rose-500/20 text-rose-300 text-[10px] px-2 py-0.5 rounded-full font-mono border border-rose-500/30">Formula: Stock / Avg Daily Sales</span>
+              </h3>
+              <p class="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                BizPilot AI continuously analyzes consumption velocity vs supplier lead times. If <strong>Days Remaining &le; Supplier Lead Days</strong>, an immediate stockout warning and reorder workflow is triggered.
+              </p>
+            </div>
+          </div>
+          <button onclick="switchTab('approvals')" class="bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-rose-600/20 transition cursor-pointer shrink-0">
+            <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+            <span>View Reorder Approval</span>
+          </button>
+        </div>
+
+        <!-- Inventory Table -->
+        <div class="bg-surface-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
+          <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+            <h3 class="font-bold text-white text-sm">Warehouse & Retail SKUs Inventory</h3>
+            <span class="text-xs text-slate-400">Total 6 Managed Products</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-surface-950 text-slate-400 uppercase font-mono text-[11px] border-b border-slate-800">
+                <tr>
+                  <th class="p-3.5">Product</th>
+                  <th class="p-3.5">Current Stock</th>
+                  <th class="p-3.5">Avg Daily Sales</th>
+                  <th class="p-3.5">Days Remaining</th>
+                  <th class="p-3.5">Lead Time</th>
+                  <th class="p-3.5">Selling Price</th>
+                  <th class="p-3.5">Health Status</th>
+                  <th class="p-3.5 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="inventory-table-body" class="divide-y divide-slate-800">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB 5: INVOICES & PAYMENTS -->
+      <div id="view-invoices" class="tab-view hidden p-6 space-y-6">
+        
+        <!-- Overdue Detection Banner -->
+        <div class="bg-gradient-to-r from-amber-950/60 via-surface-900 to-surface-900 border border-amber-500/30 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center shrink-0">
+              <i data-lucide="receipt" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-white text-base flex items-center gap-2">
+                Automated Accounts Receivable & Aging Detector
+              </h3>
+              <p class="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                The agent tracks invoice maturity dates. For overdue accounts, it automatically drafts polite payment reminders with instant UPI links and submits them to the owner for one-click authorization.
+              </p>
+            </div>
+          </div>
+          <button onclick="switchTab('approvals')" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-amber-600/20 transition cursor-pointer shrink-0">
+            <i data-lucide="send" class="w-4 h-4"></i>
+            <span>Review Reminders (2 Pending)</span>
+          </button>
+        </div>
+
+        <!-- Invoices Table -->
+        <div class="bg-surface-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
+          <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+            <h3 class="font-bold text-white text-sm">Customer Invoices Ledger</h3>
+            <span class="text-xs text-slate-400 font-mono">Real-time status</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-surface-950 text-slate-400 uppercase font-mono text-[11px] border-b border-slate-800">
+                <tr>
+                  <th class="p-3.5">Invoice #</th>
+                  <th class="p-3.5">Order Ref</th>
+                  <th class="p-3.5">Customer</th>
+                  <th class="p-3.5">Amount</th>
+                  <th class="p-3.5">Due Date</th>
+                  <th class="p-3.5">Aging / Status</th>
+                  <th class="p-3.5 text-right">Reminder Action</th>
+                </tr>
+              </thead>
+              <tbody id="invoices-table-body" class="divide-y divide-slate-800">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB 6: SUPPLIERS & COMPARATIVE MATRIX -->
+      <div id="view-suppliers" class="tab-view hidden p-6 space-y-6">
+        
+        <!-- Multi-Supplier Matrix Card -->
+        <div class="bg-surface-900 border border-slate-800 rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+                <i data-lucide="scale" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-white text-base">Multi-Supplier Weighted Evaluation Matrix</h3>
+                <p class="text-xs text-slate-400">Comparing Price, Delivery SLA, and Reliability for optimal reorder</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="text-xs text-slate-400">Select SKU to Compare:</label>
+              <select id="supplier-matrix-select" onchange="loadSupplierComparison(this.value)" class="bg-surface-950 border border-slate-700 text-xs text-white rounded-lg px-3 py-1.5 focus:outline-none focus:border-brand-500">
+                <option value="PRD-101">Boat BassHeads Earphones (🔴 Low Stock)</option>
+                <option value="PRD-102">65W Fast GaN Charger</option>
+                <option value="PRD-103">100W Braided Type-C Cable</option>
+                <option value="PRD-104">OnePlus Nord Buds 2</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="supplier-comparison-container" class="mt-4">
+            <!-- Rendered dynamically via JS -->
+          </div>
+        </div>
+
+        <!-- Suppliers Directory -->
+        <div class="bg-surface-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
+          <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+            <h3 class="font-bold text-white text-sm">Approved Suppliers Directory</h3>
+            <span class="text-xs text-slate-400">4 Active Partner Channels</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-surface-950 text-slate-400 uppercase font-mono text-[11px] border-b border-slate-800">
+                <tr>
+                  <th class="p-3.5">Supplier ID</th>
+                  <th class="p-3.5">Company Name</th>
+                  <th class="p-3.5">Contact Person</th>
+                  <th class="p-3.5">Phone & Email</th>
+                  <th class="p-3.5">City</th>
+                  <th class="p-3.5">Reliability Score</th>
+                  <th class="p-3.5">Payment Terms</th>
+                  <th class="p-3.5">Total Orders</th>
+                </tr>
+              </thead>
+              <tbody id="suppliers-table-body" class="divide-y divide-slate-800">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB 7: OWNER APPROVALS QUEUE -->
+      <div id="view-approvals" class="tab-view hidden p-6 space-y-6">
+        
+        <div class="bg-surface-900 border border-amber-500/30 rounded-2xl p-6 flex items-start gap-4">
+          <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center shrink-0">
+            <i data-lucide="shield-check" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-white text-base flex items-center gap-2">
+              Human-in-the-Loop Governance & Authorization Queue
+              <span class="bg-amber-500/20 text-amber-300 text-[10px] px-2 py-0.5 rounded-full font-mono border border-amber-500/30">Safeguard System</span>
+            </h3>
+            <p class="text-xs text-slate-300 mt-1 max-w-3xl leading-relaxed">
+              BizPilot AI autonomously carries out routine tasks, but <strong>financial transactions, purchase orders, and sensitive customer communications require owner authorization</strong>. Clicking Approve immediately executes the simulated vendor dispatch and updates inventory.
+            </p>
+          </div>
+        </div>
+
+        <div id="approvals-full-list" class="space-y-4">
+          <!-- Rendered via JS with rich cards -->
+        </div>
+
+      </div>
+
+      <!-- TAB 8: AI ACTIVITY LOG -->
+      <div id="view-activity" class="tab-view hidden p-6 space-y-6">
+        
+        <div class="bg-surface-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
+          <div class="p-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="font-bold text-white text-sm">Chronological AI Activity & Audit Trail</h3>
+              <p class="text-xs text-slate-400">Complete immutable record of all autonomous decisions and owner approvals</p>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-400">Filter Category:</span>
+              <select id="activity-filter-select" onchange="loadActivityLogs(this.value)" class="bg-surface-950 border border-slate-700 text-xs text-white rounded-lg px-3 py-1.5 focus:outline-none focus:border-brand-500">
+                <option value="All">All Categories</option>
+                <option value="Inventory">Inventory</option>
+                <option value="Orders">Orders</option>
+                <option value="Payments">Payments</option>
+                <option value="Suppliers">Suppliers</option>
+                <option value="Approvals">Approvals</option>
+                <option value="System">System</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-surface-950 text-slate-400 uppercase font-mono text-[11px] border-b border-slate-800">
+                <tr>
+                  <th class="p-3.5">Timestamp</th>
+                  <th class="p-3.5">Category</th>
+                  <th class="p-3.5">Type</th>
+                  <th class="p-3.5">Event Title</th>
+                  <th class="p-3.5">Details & Autonomous Outcome</th>
+                </tr>
+              </thead>
+              <tbody id="activity-table-body" class="divide-y divide-slate-800 font-mono text-xs">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB 9: BUSINESS SETTINGS & DEMO CONTROLS -->
+      <div id="view-settings" class="tab-view hidden p-6 space-y-6">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          <!-- Business Profile Configuration -->
+          <div class="bg-surface-900 border border-slate-800 rounded-2xl p-6">
+            <h3 class="font-bold text-white text-sm mb-4 flex items-center gap-2">
+              <i data-lucide="store" class="w-4 h-4 text-brand-400"></i> Business & Operations Profile
+            </h3>
+            
+            <form id="settings-form" onsubmit="handleSettingsSave(event)" class="space-y-4 text-xs">
+              <div>
+                <label class="block text-slate-400 mb-1">Business Name</label>
+                <input type="text" id="setting-biz-name" value="Sri Lakshmi Electronics" class="w-full bg-surface-950 border border-slate-700 rounded-xl px-3.5 py-2 text-white">
+              </div>
+              <div>
+                <label class="block text-slate-400 mb-1">Owner / Administrator Name</label>
+                <input type="text" id="setting-owner-name" value="Karthik Sharma (Owner)" class="w-full bg-surface-950 border border-slate-700 rounded-xl px-3.5 py-2 text-white">
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-slate-400 mb-1">Category</label>
+                  <input type="text" id="setting-category" value="Consumer Electronics" class="w-full bg-surface-950 border border-slate-700 rounded-xl px-3.5 py-2 text-white">
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1">City / Region</label>
+                  <input type="text" id="setting-city" value="Bengaluru, India" class="w-full bg-surface-950 border border-slate-700 rounded-xl px-3.5 py-2 text-white">
+                </div>
+              </div>
+              <div>
+                <label class="block text-slate-400 mb-1">Owner Approval Threshold (₹)</label>
+                <p class="text-[11px] text-slate-500 mb-1.5">Purchases exceeding this amount automatically require owner authorization.</p>
+                <input type="number" id="setting-approval-threshold" value="5000" class="w-full bg-surface-950 border border-slate-700 rounded-xl px-3.5 py-2 text-white font-mono">
+              </div>
+              <div class="pt-2">
+                <button type="submit" class="bg-brand-600 hover:bg-brand-500 text-white font-semibold px-4 py-2 rounded-xl text-xs transition cursor-pointer">
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Hackathon Demo State Controls -->
+          <div class="bg-surface-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+            <div>
+              <h3 class="font-bold text-white text-sm mb-2 flex items-center gap-2">
+                <i data-lucide="sliders" class="w-4 h-4 text-amber-400"></i> Hackathon State & Reset Controls
+              </h3>
+              <p class="text-xs text-slate-300 leading-relaxed mb-4">
+                Use these controls to present the live agent during judge evaluations or reset all data back to the clean baseline.
+              </p>
+
+              <div class="space-y-3 text-xs">
+                <div class="p-3 rounded-xl bg-surface-950 border border-slate-800 flex items-center justify-between">
+                  <div>
+                    <strong class="text-white block">Sri Lakshmi Electronics Demo Scenario</strong>
+                    <span class="text-slate-400 text-[11px]">Calibrate Boat Earphones stock to 8 units & run stockout detection.</span>
+                  </div>
+                  <button onclick="runHackathonDemoScenario()" class="bg-brand-600 hover:bg-brand-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 cursor-pointer">
+                    Launch Demo
+                  </button>
+                </div>
+
+                <div class="p-3 rounded-xl bg-surface-950 border border-slate-800 flex items-center justify-between">
+                  <div>
+                    <strong class="text-rose-400 block">Reset Database</strong>
+                    <span class="text-slate-400 text-[11px]">Restore initial demo orders, stock, invoices & activity logs.</span>
+                  </div>
+                  <button onclick="resetDatabaseState()" class="bg-rose-900/40 hover:bg-rose-900/70 text-rose-300 border border-rose-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 cursor-pointer">
+                    Reset Database
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+              <span>BizPilot AI Agent v1.0.0</span>
+              <span class="text-emerald-400 font-mono font-semibold">Hackathon Edition</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- MODAL 1: SIMULATED WHATSAPP CUSTOMER INGESTION -->
+  <div id="whatsapp-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-surface-900 border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
+      <!-- WhatsApp Header -->
+      <div class="bg-[#075e54] p-4 text-white flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-emerald-400 flex items-center justify-center text-slate-950 font-bold">
+            <i data-lucide="user" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h4 class="font-bold text-sm">Customer WhatsApp Ingestion</h4>
+            <span class="text-[11px] text-emerald-200">BizPilot AI Listening & Auto-Fulfilling</span>
+          </div>
+        </div>
+        <button onclick="closeWhatsAppSimulatorModal()" class="text-white/80 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Quick Preset Buttons -->
+      <div class="p-3 bg-surface-950 border-b border-slate-800 text-xs">
+        <span class="text-slate-400 block mb-1.5 text-[11px]">Click preset test message:</span>
+        <div class="flex flex-wrap gap-1.5">
+          <button onclick="setWhatsAppPreset('I need 10 Boat earphones and 5 chargers', 'Arjun Mehta')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded text-[11px] border border-slate-700 transition">
+            1. Shortage: 10 Boat + 5 Chargers
+          </button>
+          <button onclick="setWhatsAppPreset('Please send 2 65W fast chargers and 4 type c cables urgently', 'Rohan Verma')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded text-[11px] border border-slate-700 transition">
+            2. Available: 2 Chargers + 4 Cables
+          </button>
+          <button onclick="setWhatsAppPreset('Need 1 Fastrack smartwatch and 2 Sandisk 128gb memory cards', 'Deepa Nair')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded text-[11px] border border-slate-700 transition">
+            3. Available: Smartwatch + SD Cards
+          </button>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <div class="p-5 space-y-4 text-xs">
+        <div>
+          <label class="block text-slate-400 mb-1">Customer Name</label>
+          <input type="text" id="wa-customer-name" value="Arjun Mehta (TechCorp)" class="w-full bg-surface-950 border border-slate-700 rounded-xl px-3.5 py-2 text-white">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">WhatsApp Message Text</label>
+          <textarea id="wa-message-text" rows="3" class="w-full bg-surface-950 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500 font-sans" placeholder="Type a message, e.g. I need 2 chargers and 3 type-c cables..."></textarea>
+        </div>
+
+        <!-- Result Container -->
+        <div id="wa-result-box" class="hidden p-3.5 rounded-xl text-xs"></div>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="p-4 bg-surface-950 border-t border-slate-800 flex items-center justify-between">
+        <button onclick="closeWhatsAppSimulatorModal()" class="text-slate-400 hover:text-white text-xs px-3 py-2">Close</button>
+        <button onclick="submitSimulatedWhatsAppMessage()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer">
+          <i data-lucide="send" class="w-3.5 h-3.5"></i>
+          <span>Process Message</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast-notification" class="fixed bottom-5 right-5 bg-surface-900 border border-slate-700 text-white px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 max-w-md">
+    <div id="toast-icon" class="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
+      <i data-lucide="check" class="w-4 h-4"></i>
+    </div>
+    <div class="text-xs">
+      <h5 id="toast-title" class="font-bold text-white">Notification</h5>
+      <p id="toast-message" class="text-slate-300 text-[11px]">Details</p>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

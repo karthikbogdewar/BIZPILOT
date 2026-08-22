@@ -70,61 +70,67 @@ function initCharts() {
 // NAVIGATION & TABS
 // -------------------------------------------------------------
 function switchTab(tabId) {
-  state.activeTab = tabId;
-  
-  // Update sidebar buttons
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    if (btn.dataset.tab === tabId) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
+  try {
+    state.activeTab = tabId;
+    
+    // Update sidebar buttons
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      if (btn.dataset.tab === tabId) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    // Update main views
+    document.querySelectorAll('.tab-view').forEach(view => {
+      view.classList.add('hidden');
+    });
+
+    const activeView = document.getElementById(`view-${tabId}`);
+    if (activeView) {
+      activeView.classList.remove('hidden');
     }
-  });
 
-  // Update main views
-  document.querySelectorAll('.tab-view').forEach(view => {
-    view.classList.add('hidden');
-  });
+    // Update page title
+    const titleMap = {
+      'dashboard': 'Operational Command Dashboard',
+      'agents-squad': 'Autonomous AI Agents Squad (7 Active Workers)',
+      'ai-agent': 'AI Agent Cognition & Command Center',
+      'orders': 'Orders & WhatsApp Ingestion Channel',
+      'inventory': 'Inventory & Stockout Prediction Engine',
+      'invoices': 'Invoices & Accounts Receivable Tracking',
+      'suppliers': 'Suppliers & Multi-Criteria Matrix',
+      'approvals': 'Human-in-the-Loop Owner Approvals Queue',
+      'what-if': 'Supply Chain & Festive Surge "What-If" Digital Twin',
+      'activity': 'Real-Time AI Activity & Audit Stream',
+      'settings': 'Business Profile & Demo Settings'
+    };
+    setElementText('page-title', titleMap[tabId] || 'BizPilot AI');
 
-  const activeView = document.getElementById(`view-${tabId}`);
-  if (activeView) {
-    activeView.classList.remove('hidden');
-  }
+    // Trigger tab-specific refresh safely
+    try {
+      if (tabId === 'agents-squad') renderAgentsSquadPage();
+      if (tabId === 'what-if') runWhatIfSimulation();
+      if (tabId === 'inventory') renderInventoryPage();
+      if (tabId === 'orders') renderOrdersPage();
+      if (tabId === 'invoices') renderInvoicesPage();
+      if (tabId === 'inventory') loadMultiBranchData();
+      if (tabId === 'suppliers') {
+        renderSuppliersPage();
+        loadSupplierComparison('PRD-101');
+      }
+      if (tabId === 'approvals') renderApprovalsPage();
+      if (tabId === 'activity') loadActivityLogs();
+    } catch (tabErr) {
+      console.warn(`Tab specific render error for ${tabId}:`, tabErr);
+    }
 
-  // Update page title
-  const titleMap = {
-    'dashboard': 'Operational Command Dashboard',
-    'agents-squad': 'Autonomous AI Agents Squad (7 Active Workers)',
-    'ai-agent': 'AI Agent Cognition & Command Center',
-    'orders': 'Orders & WhatsApp Ingestion Channel',
-    'inventory': 'Inventory & Stockout Prediction Engine',
-    'invoices': 'Invoices & Accounts Receivable Tracking',
-    'suppliers': 'Suppliers & Multi-Criteria Matrix',
-    'approvals': 'Human-in-the-Loop Owner Approvals Queue',
-    'what-if': 'Supply Chain & Festive Surge "What-If" Digital Twin',
-    'activity': 'Real-Time AI Activity & Audit Stream',
-    'settings': 'Business Profile & Demo Settings'
-  };
-  document.getElementById('page-title').innerText = titleMap[tabId] || 'BizPilot AI';
-
-  // Trigger tab-specific refresh
-  if (tabId === 'agents-squad') renderAgentsSquadPage();
-  if (tabId === 'what-if') runWhatIfSimulation();
-  if (tabId === 'inventory') renderInventoryPage();
-  if (tabId === 'orders') renderOrdersPage();
-  if (tabId === 'invoices') renderInvoicesPage();
-  if (tabId === 'inventory') {
-    loadMultiBranchData();
-  }
-  if (tabId === 'suppliers') {
-    renderSuppliersPage();
-    loadSupplierComparison('PRD-101');
-  }
-  if (tabId === 'approvals') renderApprovalsPage();
-  if (tabId === 'activity') loadActivityLogs();
-
-  if (window.lucide) {
-    lucide.createIcons();
+    if (window.lucide) {
+      lucide.createIcons();
+    }
+  } catch (err) {
+    console.error('switchTab general error:', err);
   }
 }
 
@@ -215,6 +221,16 @@ function updateLastSyncTime() {
   }
 }
 
+// Helper functions for safe DOM updates
+function setElementText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.innerText = text;
+}
+function setElementHtml(id, html) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = html;
+}
+
 // -------------------------------------------------------------
 // RENDER: DASHBOARD VIEW
 // -------------------------------------------------------------
@@ -223,31 +239,36 @@ function renderDashboard(data) {
 
   // Header info
   if (data.profile) {
-    document.getElementById('header-business-name').innerText = data.profile.business_name || 'Sri Lakshmi Electronics';
-    document.getElementById('header-owner-name').innerText = data.profile.owner_name || 'Karthik Sharma';
+    setElementText('header-business-name', data.profile.business_name || 'Sri Lakshmi Electronics');
+    setElementText('header-owner-name', data.profile.owner_name || 'Karthik Sharma');
   }
 
   // Top Statistics
-  document.getElementById('stat-total-orders').innerText = data.stats.total_orders;
-  document.getElementById('stat-pending-orders').innerText = data.stats.pending_orders;
-  document.getElementById('stat-low-stock').innerText = data.stats.low_stock_count;
-  document.getElementById('stat-outstanding-payments').innerText = `₹${data.stats.outstanding_payments.toLocaleString('en-IN')}`;
-  document.getElementById('stat-today-revenue').innerText = `₹${data.stats.today_revenue.toLocaleString('en-IN')}`;
-  document.getElementById('stat-auto-tasks').innerText = data.stats.auto_completed_tasks;
+  if (data.stats) {
+    setElementText('stat-total-orders', data.stats.total_orders ?? 0);
+    setElementText('stat-pending-orders', data.stats.pending_orders ?? 0);
+    setElementText('stat-low-stock', data.stats.low_stock_count ?? 0);
+    setElementText('stat-outstanding-payments', `₹${(data.stats.outstanding_payments || 0).toLocaleString('en-IN')}`);
+    setElementText('stat-today-revenue', `₹${(data.stats.today_revenue || 0).toLocaleString('en-IN')}`);
+    setElementText('stat-auto-tasks', data.stats.auto_completed_tasks ?? 0);
+    setElementText('nav-orders-count', data.stats.total_orders ?? 0);
+    setElementText('nav-stockout-badge', `${data.stats.low_stock_count ?? 0} Risk`);
+  }
 
   // Sidebar badges
-  document.getElementById('nav-orders-count').innerText = data.stats.total_orders;
-  document.getElementById('nav-stockout-badge').innerText = `${data.stats.low_stock_count} Risk`;
-  document.getElementById('nav-overdue-count').innerText = `${data.daily_summary.overdue_payments} Overdue`;
+  if (data.daily_summary) {
+    setElementText('nav-overdue-count', `${data.daily_summary.overdue_payments || 0} Overdue`);
+  }
   
-  const pendingApprovalsCount = data.priority.needs_approval.length;
-  document.getElementById('nav-approvals-count').innerText = pendingApprovalsCount;
-  document.getElementById('header-approval-pill').innerText = pendingApprovalsCount;
-  document.getElementById('needs-approval-badge-count').innerText = `${pendingApprovalsCount} Pending`;
+  const pendingApprovalsCount = data.priority && data.priority.needs_approval ? data.priority.needs_approval.length : 0;
+  setElementText('nav-approvals-count', pendingApprovalsCount);
+  setElementText('header-approval-pill', pendingApprovalsCount);
+  setElementText('needs-approval-badge-count', `${pendingApprovalsCount} Pending`);
 
   // 1. 🔴 URGENT ITEMS
   const urgentContainer = document.getElementById('urgent-items-list');
-  document.getElementById('urgent-badge-count').innerText = `${data.priority.urgent.length} Items`;
+  if (urgentContainer && data.priority && data.priority.urgent) {
+    setElementText('urgent-badge-count', `${data.priority.urgent.length} Items`);
   urgentContainer.innerHTML = '';
 
   if (data.priority.urgent.length === 0) {
@@ -345,29 +366,33 @@ function renderDashboard(data) {
   }
 
   // Daily Summary Stats
-  document.getElementById('daily-orders-count').innerText = data.daily_summary.orders_processed;
-  document.getElementById('daily-lowstock-count').innerText = data.daily_summary.low_stock_risks;
-  document.getElementById('daily-overdue-count').innerText = data.daily_summary.overdue_payments;
-  document.getElementById('daily-auto-count').innerText = data.daily_summary.tasks_auto_completed;
-  document.getElementById('daily-decisions-count').innerText = data.daily_summary.owner_decisions_required;
-  document.getElementById('daily-top-recommendation').innerHTML = data.daily_summary.highest_priority_recommendation;
+  if (data.daily_summary) {
+    setElementText('daily-orders-count', data.daily_summary.orders_processed ?? 0);
+    setElementText('daily-lowstock-count', data.daily_summary.low_stock_risks ?? 0);
+    setElementText('daily-overdue-count', data.daily_summary.overdue_payments ?? 0);
+    setElementText('daily-auto-count', data.daily_summary.tasks_auto_completed ?? 0);
+    setElementText('daily-decisions-count', data.daily_summary.owner_decisions_required ?? 0);
+    setElementHtml('daily-top-recommendation', data.daily_summary.highest_priority_recommendation || 'All systems operational');
+  }
 
   // Mini Activity Logs
   const miniLogs = document.getElementById('dashboard-mini-logs');
-  miniLogs.innerHTML = '';
-  if (data.recent_logs) {
-    data.recent_logs.slice(0, 5).forEach(log => {
-      const div = document.createElement('div');
-      div.className = 'flex items-center justify-between py-1.5 border-b border-slate-800/60 last:border-0 text-xs';
-      div.innerHTML = `
-        <div class="flex items-center gap-2 truncate">
-          <span class="w-1.5 h-1.5 rounded-full ${log.severity === 'urgent' ? 'bg-rose-500' : (log.severity === 'warning' ? 'bg-amber-500' : 'bg-emerald-400')}"></span>
-          <span class="text-slate-200 truncate">${log.title}</span>
-        </div>
-        <span class="text-[10px] text-slate-500 font-mono shrink-0">${log.time_display}</span>
-      `;
-      miniLogs.appendChild(div);
-    });
+  if (miniLogs) {
+    miniLogs.innerHTML = '';
+    if (data.recent_logs) {
+      data.recent_logs.slice(0, 5).forEach(log => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between py-1.5 border-b border-slate-800/60 last:border-0 text-xs';
+        div.innerHTML = `
+          <div class="flex items-center gap-2 truncate">
+            <span class="w-1.5 h-1.5 rounded-full ${log.severity === 'urgent' ? 'bg-rose-500' : (log.severity === 'warning' ? 'bg-amber-500' : 'bg-emerald-400')}"></span>
+            <span class="text-slate-200 truncate">${log.title}</span>
+          </div>
+          <span class="text-[10px] text-slate-500 font-mono shrink-0">${log.time_display}</span>
+        `;
+        miniLogs.appendChild(div);
+      });
+    }
   }
 
   // Cognition stream in AI Agent tab
@@ -1661,10 +1686,10 @@ function startVoiceAssistant() {
 
         // Switch to AI command center and show answer
         switchTab('ai-agent');
-        const queryInput = document.getElementById('command-query-input') || document.getElementById('ai-command-input');
+        const queryInput = document.getElementById('ai-command-input');
         if (queryInput) queryInput.value = transcript;
 
-        const container = document.getElementById('command-center-conversation') || document.getElementById('ai-chat-messages');
+        const container = document.getElementById('ai-chat-messages');
         if (container) {
           const userMsg = document.createElement('div');
           userMsg.className = 'p-3 bg-slate-800/80 border border-slate-700 rounded-xl text-xs text-white max-w-lg self-end ml-auto';

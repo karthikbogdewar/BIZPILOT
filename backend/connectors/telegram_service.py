@@ -123,6 +123,20 @@ class TelegramService:
                 res_data = json.loads(response.read().decode("utf-8"))
                 return {"success": True, "result": res_data}
         except Exception as e:
+            # If parse mode caused 400 Bad Request, fallback to plain text without parse_mode
+            if parse_mode:
+                try:
+                    payload.pop("parse_mode", None)
+                    req = urllib.request.Request(
+                        url,
+                        data=json.dumps(payload).encode("utf-8"),
+                        headers={"Content-Type": "application/json"}
+                    )
+                    with urllib.request.urlopen(req, timeout=10) as response:
+                        res_data = json.loads(response.read().decode("utf-8"))
+                        return {"success": True, "result": res_data}
+                except Exception as e2:
+                    logger.error(f"Fallback plain Telegram message send failed: {e2}")
             logger.error(f"Failed to send Telegram message: {e}")
             return {"success": False, "error": str(e)}
 

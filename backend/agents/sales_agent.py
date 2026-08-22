@@ -127,6 +127,27 @@ class SalesAgent(BaseBizPilotAgent):
             ml_agent = MultilingualAgent()
             detected_lang = ml_agent.detect_language(raw_msg)
 
+            # 0. Check for Pure Greetings & Small Talk
+            greeting_words = ['hi', 'hello', 'hey', 'namaste', 'namaskaram', 'namaskara', 'vanakkam', 'good morning', 'good evening', 'ela unnaru', 'kaise ho']
+            is_pure_greeting = lower_msg.strip() in greeting_words or (len(lower_msg.split()) <= 2 and any(w in lower_msg for w in greeting_words))
+            if is_pure_greeting:
+                conn.close()
+                greeting_reply = ml_agent.format_greeting_reply(detected_lang, customer_name, products)
+                return {
+                    "agent_id": self.agent_id,
+                    "agent_name": self.name,
+                    "task": task_name,
+                    "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                    "status": "GREETING_REPLIED",
+                    "order_created": False,
+                    "customer_name": customer_name,
+                    "detected_language": detected_lang,
+                    "items_parsed": [],
+                    "total_amount": 0.0,
+                    "drafted_reply": greeting_reply,
+                    "summary": f"Welcomed {customer_name} warmly in '{detected_lang}' like a helpful Indian store clerk."
+                }
+
             # 1. First pass: Check specific product name & regex patterns
             for p in products:
                 pid = p['id']
@@ -170,10 +191,36 @@ class SalesAgent(BaseBizPilotAgent):
                                     "available_stock": p['stock']
                                 })
 
-            # 3. Third pass: If product mentioned without quantity, default to 1 unit ONLY if clearly intending to buy
+            # 3. Third pass: Check if user is asking for Price / Availability (e.g. "how much is phone", "charger price")
+            price_query_words = ['price', 'cost', 'rate', 'how much', 'kitna', 'daam', 'entha', 'yestu', 'evvalavu', 'available', 'unnaya', 'iddiya', 'iruka', 'undha', 'stock']
+            is_price_inquiry = any(w in lower_msg for w in price_query_words) and not any(w in lower_msg for w in ['order', 'bhejo', 'pampandi', 'pack', 'send'])
+
+            if is_price_inquiry and not parsed_items:
+                for p in products:
+                    pid = p['id']
+                    syns = SYNONYMS.get(pid, [])
+                    if any(re.search(rf"\b{re.escape(s)}\b", lower_msg) for s in syns):
+                        conn.close()
+                        inquiry_reply = ml_agent.format_price_inquiry_reply(detected_lang, customer_name, p)
+                        return {
+                            "agent_id": self.agent_id,
+                            "agent_name": self.name,
+                            "task": task_name,
+                            "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                            "status": "PRICE_INQUIRY_REPLIED",
+                            "order_created": False,
+                            "customer_name": customer_name,
+                            "detected_language": detected_lang,
+                            "items_parsed": [],
+                            "total_amount": 0.0,
+                            "drafted_reply": inquiry_reply,
+                            "summary": f"Replied to price/stock inquiry for '{p['name']}' in '{detected_lang}'. No order created."
+                        }
+
+            # 4. Fourth pass: If product mentioned without quantity, default to 1 unit ONLY if clearly intending to buy
             if not parsed_items:
-                buy_intent_words = ['need', 'want', 'send', 'order', 'kavali', 'bhejo', 'chahiye', 'beku', 'venum', 'pampandi', 'anupunga', 'kodu']
-                has_buy_intent = any(w in lower_msg for w in buy_intent_words)
+                buy_intent_words = ['need', 'want', 'send', 'order', 'kavali', 'bhejo', 'chahiye', 'beku', 'venum', 'pampandi', 'anupunga', 'kodu', 'pack']
+                has_buy_intent = any(w in lower_msg for w in buy_intent_words) or is_price_inquiry is False
 
                 for p in products:
                     pid = p['id']
@@ -195,20 +242,10 @@ class SalesAgent(BaseBizPilotAgent):
                 unique_items[it['product_id']] = it
             parsed_items = list(unique_items.values())
 
-            # 4. IF STILL NO PRODUCTS MATCHED: DO NOT CREATE FAKE ORDER! Return helpful catalog inquiry reply.
+            # 5. IF STILL NO PRODUCTS MATCHED: Return natural unstocked guidance reply
             if not parsed_items:
                 conn.close()
-                if detected_lang == 'te':
-                    catalog_reply = f"నమస్కారం {customer_name}! శ్రీ లక్ష్మి ఎలక్ట్రానిక్స్ కు స్వాగతం. మీ సందేశంలో ఆర్డర్ వివరాలు స్పష్టంగా లేవు. మా వద్ద లభించే వస్తువులు:\n• 🎧 Boat ఇయర్ ఫోన్లు (₹699)\n• ⚡ 65W GaN ఫాస్ట్ ఛార్జర్ (₹1,299)\n• 🔌 100W Type-C కేబుల్ (₹399)\n• 📱 Redmi Note 13 5G మొబైల్ (₹15,499)\n• 🔋 20000mAh పవర్ బ్యాంక్ (₹1,899)\n• ⌚ స్మార్ట్ వాచ్ (₹1,999)\n\nదయచేసి మీకు ఏ వస్తువు మరియు ఎన్ని కావాలో చెప్పండి (ఉదా: '2 ఛార్జర్లు మరియు 1 మొబైల్ కావాలి')."
-                elif detected_lang == 'hi':
-                    catalog_reply = f"नमस्ते {customer_name}! श्री लक्ष्मी इलेक्ट्रॉनिक्स में आपका स्वागत है। आपके संदेश में प्रोडक्ट की जानकारी स्पष्ट नहीं है। हमारे पास उपलब्ध हैं:\n• 🎧 Boat ईयरफोन (₹699)\n• ⚡ 65W फास्ट चार्जर (₹1,299)\n• 🔌 Type-C केबल (₹399)\n• 📱 Redmi 5G स्मार्टफोन (₹15,499)\n• 🔋 20000mAh पावर बैंक (₹1,899)\n• ⌚ स्मार्टवॉच (₹1,999)\n\nकृपया बताएं आपको क्या और कितना चाहिए (जैसे: '2 चार्जर और 1 फोन चाहिए')।"
-                elif detected_lang == 'kn':
-                    catalog_reply = f"ನಮಸ್ಕಾರ {customer_name}! ಶ್ರೀ ಲಕ್ಷ್ಮೀ ಎಲೆಕ್ಟ್ರಾನಿಕ್ಸ್ ಗೆ ಸುಸ್ವಾಗತ. ನಮ್ಮಲ್ಲಿ ಲಭ್ಯವಿರುವ ವಸ್ತುಗಳು: ಇಯರ್ ಫೋನ್ ಗಳು (₹699), 65W ಫಾಸ್ಟ್ ಚಾರ್ಜರ್ (₹1,299), Type-C ಕೇಬಲ್ (₹399), Redmi 5G ಮೊಬೈಲ್ (₹15,499), ಪವರ್ ಬ್ಯಾಂಕ್ (₹1,899). ದಯವಿಟ್ಟು ನಿಮಗೆ ಎಷ್ಟು ಬೇಕು ತಿಳಿಸಿ."
-                elif detected_lang == 'ta':
-                    catalog_reply = f"வணக்கம் {customer_name}! ஸ்ரீ லக்ஷ்மி எலக்ட்ரானிக்ஸுக்கு வரவேற்கிறோம். எங்களிடம் இயர்போன்கள் (₹699), 65W பாஸ்ட் சார்ஜர் (₹1,299), Type-C கேபிள் (₹399), Redmi 5G மொபைல் (₹15,499), பவர் பேங்க் (₹1,899) உள்ளன. என்ன வேண்டும் என்று குறிப்பிடவும்."
-                else:
-                    catalog_reply = f"Hello {customer_name}! Welcome to Sri Lakshmi Electronics. We couldn't recognize specific items in your message. Here is what we stock:\n• 🎧 Boat BassHeads Earphones (₹699)\n• ⚡ 65W Fast GaN Charger (₹1,299)\n• 🔌 100W Braided Type-C Cable (₹399)\n• 📱 Redmi Note 13 5G Smartphone (₹15,499)\n• 🔋 Mi 20000mAh Fast Power Bank (₹1,899)\n• ⌚ Fastrack Smartwatch (₹1,999)\n\nPlease let us know what you'd like to order (e.g. 'I need 2 chargers and 1 phone')."
-
+                unstocked_reply = ml_agent.format_unstocked_reply(detected_lang, customer_name, products)
                 return {
                     "agent_id": self.agent_id,
                     "agent_name": self.name,
@@ -220,8 +257,8 @@ class SalesAgent(BaseBizPilotAgent):
                     "detected_language": detected_lang,
                     "items_parsed": [],
                     "total_amount": 0.0,
-                    "drafted_reply": catalog_reply,
-                    "summary": f"Inquiry from {customer_name} replied with product catalog. No order created."
+                    "drafted_reply": unstocked_reply,
+                    "summary": f"Inquiry from {customer_name} replied with honest store catalog guidance. No order created."
                 }
 
             total_amount = sum(item['total_price'] for item in parsed_items)

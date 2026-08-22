@@ -6,13 +6,18 @@ import {
   CheckCircle,
   Play,
   Layers,
-  Sparkles
+  Sparkles,
+  Search,
+  Power,
+  ChevronRight
 } from 'lucide-react';
+import AgentDetailModal from '../modals/AgentDetailModal';
 
-export default function AgentsSquadTab({ agents, onExecuteTask }) {
+export default function AgentsSquadTab({ agents, showToast }) {
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [taskResult, setTaskResult] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const defaultAgents = [
     {
@@ -99,19 +104,33 @@ export default function AgentsSquadTab({ agents, onExecuteTask }) {
 
   const agentList = agents && agents.length > 0 ? agents : defaultAgents;
 
-  const handleRunTask = async (agentId, taskName) => {
+  const filteredAgents = agentList.filter(
+    (a) =>
+      a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      a.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      a.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleRunTaskDirect = async (agentId, taskName, e) => {
+    e.stopPropagation();
     setIsRunning(true);
     setTaskResult(null);
     try {
-      const res = await fetch(`/api/agents/${agentId}/execute`, {
+      const res = await fetch(`/api/agents/${agentId}/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ task_name: taskName, payload: {} })
       });
       const data = await res.json();
       setTaskResult(data);
+      if (showToast) {
+        showToast('Task Complete ⚡', `Agent executed task '${taskName}'.`, 'success');
+      }
     } catch (err) {
       setTaskResult({ success: false, error: err.message });
+      if (showToast) {
+        showToast('Execution Error', err.message, 'error');
+      }
     } finally {
       setIsRunning(false);
     }
@@ -127,51 +146,71 @@ export default function AgentsSquadTab({ agents, onExecuteTask }) {
             <h2 className="text-base font-bold text-white">7-Agent Autonomous Operations Swarm</h2>
           </div>
           <p className="text-xs text-slate-400 max-w-2xl leading-relaxed">
-            Each specialized agent operates autonomously in the background, executing stock forecasting, procurement, multilingual order fulfillment, and cash recovery with zero human friction.
+            Specialized background workers coordinating stock calibration, PO preparation, natural language multilingual order parsing, and cash recovery with zero human friction.
           </p>
         </div>
+
+        {/* Search Input */}
         <div className="flex items-center gap-2">
-          <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-mono font-bold flex items-center gap-1.5">
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+            <input
+              type="text"
+              placeholder="Filter agents..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-surface-950 border border-slate-700 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500"
+            />
+          </div>
+          <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-mono font-bold flex items-center gap-1.5 shrink-0">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            Swarm Operational
+            7 / 7 Active
           </span>
         </div>
       </div>
 
       {/* 7-Agent Card Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {agentList.map((agent) => (
+        {filteredAgents.map((agent) => (
           <div
             key={agent.id}
-            className="p-4 rounded-2xl bg-surface-900/80 border border-slate-800 hover:border-brand-500/50 transition flex flex-col justify-between space-y-3"
+            onClick={() => setSelectedAgent(agent)}
+            className="p-4 rounded-2xl bg-surface-900/80 border border-slate-800 hover:border-brand-500/60 hover:shadow-lg hover:shadow-brand-500/10 transition flex flex-col justify-between space-y-3 cursor-pointer group"
           >
             <div>
               <div className="flex items-center justify-between mb-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-600 to-indigo-600 flex items-center justify-center text-white">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-600 to-indigo-600 flex items-center justify-center text-white shadow-md">
                   <Bot className="w-4 h-4" />
                 </div>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-emerald-400 border border-slate-700">
                   {agent.status || 'ACTIVE'}
                 </span>
               </div>
-              <h3 className="font-bold text-white text-xs">{agent.name}</h3>
+              <h3 className="font-bold text-white text-xs group-hover:text-brand-300 transition">
+                {agent.name}
+              </h3>
               <span className="text-[11px] text-brand-400 font-mono block mt-0.5">{agent.role}</span>
-              <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">{agent.description}</p>
+              <p className="text-[11px] text-slate-400 mt-2 leading-relaxed line-clamp-3">
+                {agent.description}
+              </p>
             </div>
 
             <div className="pt-2 border-t border-slate-800/80 space-y-1.5">
-              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">
-                Autonomous Tasks:
-              </span>
+              <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 uppercase tracking-wider">
+                <span>Autonomous Tasks:</span>
+                <span className="text-brand-400 font-medium group-hover:underline flex items-center gap-0.5">
+                  Inspect &rarr;
+                </span>
+              </div>
               <div className="flex flex-wrap gap-1.5">
                 {(agent.tasks || [{ name: 'health_check', label: 'Check Status' }]).map((t, idx) => (
                   <button
                     key={idx}
-                    onClick={() => handleRunTask(agent.id, t.name)}
+                    onClick={(e) => handleRunTaskDirect(agent.id, t.name, e)}
                     disabled={isRunning}
                     className="px-2 py-1 rounded-md bg-surface-950 hover:bg-brand-600/30 text-slate-300 hover:text-white border border-slate-800 text-[10px] font-medium transition flex items-center gap-1 cursor-pointer"
                   >
-                    <Play className="w-2.5 h-2.5 text-brand-400" />
+                    <Play className="w-2.5 h-2.5 text-brand-400 fill-current" />
                     <span>{t.label}</span>
                   </button>
                 ))}
@@ -181,25 +220,33 @@ export default function AgentsSquadTab({ agents, onExecuteTask }) {
         ))}
       </div>
 
-      {/* Task Execution Output Modal / Box */}
+      {/* Task Execution Output Drawer */}
       {taskResult && (
         <div className="p-4 rounded-xl bg-surface-950 border border-brand-500/40 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-1.5">
-              <CheckCircle className="w-4 h-4" /> Task Execution Result
+              <CheckCircle className="w-4 h-4" /> Autonomous Task Output
             </span>
             <button
               onClick={() => setTaskResult(null)}
-              className="text-slate-400 hover:text-white text-xs px-2 py-1"
+              className="text-slate-400 hover:text-white text-xs px-2 py-1 cursor-pointer"
             >
               Close
             </button>
           </div>
-          <pre className="p-3 rounded-lg bg-surface-900 border border-slate-800 font-mono text-[11px] text-slate-200 overflow-x-auto">
+          <pre className="p-3 rounded-lg bg-surface-900 border border-slate-800 font-mono text-[11px] text-slate-200 overflow-x-auto max-h-48">
             {JSON.stringify(taskResult, null, 2)}
           </pre>
         </div>
       )}
+
+      {/* Agent Detail Modal */}
+      <AgentDetailModal
+        isOpen={!!selectedAgent}
+        onClose={() => setSelectedAgent(null)}
+        agent={selectedAgent}
+        showToast={showToast}
+      />
     </div>
   );
 }

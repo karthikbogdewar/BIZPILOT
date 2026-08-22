@@ -1,22 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ShieldAlert,
   Check,
   X,
   CheckCircle2,
   Clock,
-  Send
+  Send,
+  Eye,
+  Filter
 } from 'lucide-react';
+import ApprovalDetailModal from '../modals/ApprovalDetailModal';
 
 export default function ApprovalsTab({
-  approvals,
+  approvals = [],
   onApprove,
   onReject,
-  onSendTelegramCard
+  onRequestChanges,
+  showToast
 }) {
+  const [selectedApproval, setSelectedApproval] = useState(null);
+  const [historyFilter, setHistoryFilter] = useState('All');
+
   const approvalList = approvals || [];
   const pendingApprovals = approvalList.filter((a) => a.status === 'Pending');
   const pastApprovals = approvalList.filter((a) => a.status !== 'Pending');
+
+  const filteredPastApprovals = pastApprovals.filter((a) => {
+    if (historyFilter === 'All') return true;
+    return a.status?.toLowerCase() === historyFilter.toLowerCase();
+  });
 
   return (
     <div className="p-6 space-y-6">
@@ -71,9 +83,14 @@ export default function ApprovalsTab({
                 </div>
 
                 <div className="pt-3 border-t border-slate-800 flex items-center justify-between">
-                  <span className="text-[10px] text-slate-500 font-mono">
-                    ID: {app.id}
-                  </span>
+                  <button
+                    onClick={() => setSelectedApproval(app)}
+                    className="text-brand-400 hover:text-brand-300 text-xs font-medium flex items-center gap-1 cursor-pointer"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Review Breakdown</span>
+                  </button>
+
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => onReject(app.id)}
@@ -99,9 +116,27 @@ export default function ApprovalsTab({
       {/* Past Decision History */}
       {pastApprovals.length > 0 && (
         <div className="space-y-3 pt-4">
-          <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">
-            Past Decision History
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">
+              Past Decision History ({pastApprovals.length})
+            </h3>
+            <div className="flex items-center gap-1 text-[11px]">
+              {['All', 'Approved', 'Rejected', 'Changes Requested'].map((st) => (
+                <button
+                  key={st}
+                  onClick={() => setHistoryFilter(st)}
+                  className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                    historyFilter === st
+                      ? 'bg-slate-800 text-white font-bold'
+                      : 'text-slate-500 hover:text-slate-300'
+                  }`}
+                >
+                  {st}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="rounded-2xl bg-surface-900/60 border border-slate-800 overflow-hidden">
             <table className="w-full text-left text-xs">
               <thead className="bg-surface-950/80 border-b border-slate-800 text-slate-400 font-mono text-[11px]">
@@ -114,8 +149,12 @@ export default function ApprovalsTab({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
-                {pastApprovals.map((app) => (
-                  <tr key={app.id} className="hover:bg-slate-800/30 transition">
+                {filteredPastApprovals.map((app) => (
+                  <tr
+                    key={app.id}
+                    onClick={() => setSelectedApproval(app)}
+                    className="hover:bg-slate-800/30 transition cursor-pointer"
+                  >
                     <td className="p-3.5 font-mono text-slate-400">{app.id}</td>
                     <td className="p-3.5 font-medium text-white">{app.title}</td>
                     <td className="p-3.5 text-slate-400 font-mono">{app.type}</td>
@@ -127,6 +166,8 @@ export default function ApprovalsTab({
                         className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
                           app.status === 'Approved'
                             ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                            : app.status === 'Changes Requested'
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
                             : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
                         }`}
                       >
@@ -140,6 +181,17 @@ export default function ApprovalsTab({
           </div>
         </div>
       )}
+
+      {/* Approval Detail Modal */}
+      <ApprovalDetailModal
+        isOpen={!!selectedApproval}
+        onClose={() => setSelectedApproval(null)}
+        approval={selectedApproval}
+        onApprove={onApprove}
+        onReject={onReject}
+        onRequestChanges={onRequestChanges}
+        showToast={showToast}
+      />
     </div>
   );
 }

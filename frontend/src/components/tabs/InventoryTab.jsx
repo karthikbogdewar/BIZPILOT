@@ -7,21 +7,37 @@ import {
   AlertTriangle,
   ArrowRight,
   CheckCircle,
-  RefreshCw
+  RefreshCw,
+  Search,
+  Plus,
+  Sliders,
+  Sparkles
 } from 'lucide-react';
+import StockAdjustModal from '../modals/StockAdjustModal';
 
 export default function InventoryTab({
-  products,
+  products = [],
   onOpenOcr,
   onCompareSupplier,
+  onStockUpdated,
+  initialFilter = null,
   showToast
 }) {
   const [branchData, setBranchData] = useState(null);
   const [isTransferring, setIsTransferring] = useState(false);
+  const [selectedProductForAdjust, setSelectedProductForAdjust] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState(initialFilter || 'All');
 
   useEffect(() => {
     fetchBranchData();
   }, []);
+
+  useEffect(() => {
+    if (initialFilter) {
+      setStatusFilter(initialFilter);
+    }
+  }, [initialFilter]);
 
   const fetchBranchData = async () => {
     try {
@@ -42,16 +58,22 @@ export default function InventoryTab({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          from_branch: transfer.from_branch,
-          to_branch: transfer.to_branch,
+          transfer_id: `TRF-${Date.now().toString().slice(-4)}`,
           product_id: transfer.product_id,
-          quantity: transfer.quantity
+          quantity: transfer.quantity,
+          source_branch: transfer.from_branch,
+          target_branch: transfer.to_branch
         })
       });
       const data = await res.json();
       if (data.success) {
-        showToast('Inter-Store Transfer Dispatched! 🚀', `Porter driver assigned: ${data.transfer_details.delivery_partner}. Gate Pass: ${data.transfer_details.gate_pass_id}`, 'success');
+        showToast(
+          'Inter-Store Transfer Dispatched! 🚀',
+          `Porter driver assigned: ${data.transfer_details?.delivery_partner || 'Driver'}. Gate Pass: ${data.transfer_details?.gate_pass_id || 'GP-101'}`,
+          'success'
+        );
         fetchBranchData();
+        if (onStockUpdated) onStockUpdated();
       }
     } catch (err) {
       showToast('Transfer Error', err.message, 'error');
@@ -61,6 +83,36 @@ export default function InventoryTab({
   };
 
   const productList = products || [];
+
+  const filterTabs = [
+    { id: 'All', label: 'All Products' },
+    { id: 'risk', label: '🔴 Stockout Risk' },
+    { id: 'reorder', label: '🟡 Reorder Soon' },
+    { id: 'optimal', label: '🟢 Optimal Stock' }
+  ];
+
+  const filteredProducts = productList.filter((p) => {
+    const days = p.days_remaining;
+    const isCritical = days <= p.lead_time_days;
+    const isWarning = p.stock <= p.min_stock;
+
+    const matchesSearch =
+      !searchQuery ||
+      p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.category?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    let matchesFilter = true;
+    if (statusFilter === 'risk') {
+      matchesFilter = isCritical;
+    } else if (statusFilter === 'reorder') {
+      matchesFilter = isWarning && !isCritical;
+    } else if (statusFilter === 'optimal') {
+      matchesFilter = !isCritical && !isWarning;
+    }
+
+    return matchesSearch && matchesFilter;
+  });
 
   return (
     <div className="p-6 space-y-6">
@@ -143,6 +195,36 @@ export default function InventoryTab({
         </div>
       )}
 
+      {/* Filter & Search Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-surface-900/80 p-3 rounded-2xl border border-slate-800">
+        <div className="flex items-center gap-1.5 overflow-x-auto text-[11px] pb-1 md:pb-0">
+          {filterTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setStatusFilter(tab.id)}
+              className={`px-3 py-1.5 rounded-xl font-medium transition shrink-0 cursor-pointer ${
+                statusFilter === tab.id
+                  ? 'bg-brand-600 text-white font-bold shadow-md shadow-brand-500/20'
+                  : 'bg-surface-950 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative">
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+          <input
+            type="text"
+            placeholder="Search SKU or product name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="bg-surface-950 border border-slate-700 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 w-full md:w-64"
+          />
+        </div>
+      </div>
+
       {/* Main Stockout Prediction Table */}
       <div className="rounded-2xl bg-surface-900/80 border border-slate-800 overflow-hidden">
         <div className="overflow-x-auto">
@@ -160,75 +242,119 @@ export default function InventoryTab({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
-              {productList.map((p) => {
-                const days = p.days_remaining;
-                const isCritical = days <= p.lead_time_days;
-                const isWarning = p.stock <= p.min_stock;
+              {filteredProducts.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="p-8 text-center text-slate-500">
+                    No products matching current filter.
+                  </td>
+                </tr>
+              ) : (
+                filteredProducts.map((p) => {
+                  const days = p.days_remaining;
+                  const isCritical = days <= p.lead_time_days;
+                  const isWarning = p.stock <= p.min_stock;
 
-                let badgeClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
-                let statusText = 'Optimal Stock';
-                if (isCritical) {
-                  badgeClass = 'bg-rose-500/20 text-rose-300 border-rose-500/40 animate-pulse';
-                  statusText = '🔴 Stockout Risk';
-                } else if (isWarning) {
-                  badgeClass = 'bg-amber-500/20 text-amber-300 border-amber-500/30';
-                  statusText = '🟡 Reorder Soon';
-                }
+                  let badgeClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+                  let statusText = 'Optimal Stock';
+                  if (isCritical) {
+                    badgeClass = 'bg-rose-500/20 text-rose-300 border-rose-500/40 animate-pulse';
+                    statusText = '🔴 Stockout Risk';
+                  } else if (isWarning) {
+                    badgeClass = 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+                    statusText = '🟡 Reorder Soon';
+                  }
 
-                return (
-                  <tr key={p.id} className={`hover:bg-slate-800/40 transition ${isCritical ? 'bg-rose-950/15' : ''}`}>
-                    <td className="p-3.5 flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-surface-950 border border-slate-700 flex items-center justify-center font-bold text-brand-400 font-mono text-xs shrink-0">
-                        {p.id.replace('PRD-', '#')}
-                      </div>
-                      <div>
-                        <strong className="text-white block font-semibold">{p.name}</strong>
-                        <span className="text-[11px] text-slate-400">{p.category} | Buffer: {p.min_stock} units</span>
-                      </div>
-                    </td>
-                    <td className="p-3.5 font-mono font-bold text-white">
-                      {p.stock} units
-                    </td>
-                    <td className="p-3.5 font-mono text-slate-300">
-                      {p.avg_daily_sales} / day
-                    </td>
-                    <td className="p-3.5 font-mono">
-                      <span className={`font-bold ${isCritical ? 'text-rose-400' : (isWarning ? 'text-amber-400' : 'text-emerald-400')}`}>
-                        {days} days
-                      </span>
-                      <div className="w-16 bg-slate-800 rounded-full h-1.5 mt-1 overflow-hidden">
-                        <div
-                          className={`h-full ${isCritical ? 'bg-rose-500' : (isWarning ? 'bg-amber-400' : 'bg-emerald-400')}`}
-                          style={{ width: `${Math.min(100, (days / 10) * 100)}%` }}
-                        ></div>
-                      </div>
-                    </td>
-                    <td className="p-3.5 font-mono text-slate-300">
-                      {p.lead_time_days} days
-                    </td>
-                    <td className="p-3.5 font-mono text-slate-200">
-                      ₹{p.unit_price.toLocaleString('en-IN')}
-                    </td>
-                    <td className="p-3.5">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${badgeClass}`}>
-                        {statusText}
-                      </span>
-                    </td>
-                    <td className="p-3.5 text-right">
-                      <button
-                        onClick={() => onCompareSupplier(p.id)}
-                        className="bg-brand-600/30 hover:bg-brand-600/50 text-brand-300 border border-brand-500/30 text-xs px-2.5 py-1 rounded-lg transition font-medium cursor-pointer"
-                      >
-                        Reorder Analysis
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+                  return (
+                    <tr
+                      key={p.id}
+                      className={`hover:bg-slate-800/40 transition ${isCritical ? 'bg-rose-950/15' : ''}`}
+                    >
+                      <td className="p-3.5 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-surface-950 border border-slate-700 flex items-center justify-center font-bold text-brand-400 font-mono text-xs shrink-0">
+                          {p.id.replace('PRD-', '#')}
+                        </div>
+                        <div>
+                          <strong className="text-white block font-semibold">{p.name}</strong>
+                          <span className="text-[11px] text-slate-400">
+                            {p.category} | Buffer: {p.min_stock} units
+                          </span>
+                        </div>
+                      </td>
+                      <td className="p-3.5 font-mono font-bold text-white">
+                        <button
+                          onClick={() => setSelectedProductForAdjust(p)}
+                          className="hover:text-brand-300 underline decoration-dashed flex items-center gap-1 cursor-pointer"
+                          title="Click to adjust stock"
+                        >
+                          <span>{p.stock} units</span>
+                          <Sliders className="w-3 h-3 text-slate-500" />
+                        </button>
+                      </td>
+                      <td className="p-3.5 font-mono text-slate-300">
+                        {p.avg_daily_sales} / day
+                      </td>
+                      <td className="p-3.5 font-mono">
+                        <span
+                          className={`font-bold ${
+                            isCritical ? 'text-rose-400' : isWarning ? 'text-amber-400' : 'text-emerald-400'
+                          }`}
+                        >
+                          {days} days
+                        </span>
+                        <div className="w-16 bg-slate-800 rounded-full h-1.5 mt-1 overflow-hidden">
+                          <div
+                            className={`h-full ${
+                              isCritical ? 'bg-rose-500' : isWarning ? 'bg-amber-400' : 'bg-emerald-400'
+                            }`}
+                            style={{ width: `${Math.min(100, (days / 10) * 100)}%` }}
+                          ></div>
+                        </div>
+                      </td>
+                      <td className="p-3.5 font-mono text-slate-300">
+                        {p.lead_time_days} days
+                      </td>
+                      <td className="p-3.5 font-mono text-slate-200">
+                        ₹{p.unit_price.toLocaleString('en-IN')}
+                      </td>
+                      <td className="p-3.5">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${badgeClass}`}>
+                          {statusText}
+                        </span>
+                      </td>
+                      <td className="p-3.5 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => setSelectedProductForAdjust(p)}
+                            className="bg-surface-950 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs px-2 py-1 rounded-lg transition cursor-pointer"
+                            title="Adjust Stock Quantity"
+                          >
+                            Adjust
+                          </button>
+                          <button
+                            onClick={() => onCompareSupplier(p.id)}
+                            className="bg-brand-600/30 hover:bg-brand-600/50 text-brand-300 border border-brand-500/30 text-xs px-2.5 py-1 rounded-lg transition font-medium cursor-pointer"
+                          >
+                            Reorder
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Stock Adjustment Modal */}
+      <StockAdjustModal
+        isOpen={!!selectedProductForAdjust}
+        onClose={() => setSelectedProductForAdjust(null)}
+        product={selectedProductForAdjust}
+        onStockUpdated={onStockUpdated}
+        showToast={showToast}
+      />
     </div>
   );
 }

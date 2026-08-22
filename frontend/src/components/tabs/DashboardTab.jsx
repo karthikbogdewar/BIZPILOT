@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ShoppingBag,
   Clock,
@@ -7,15 +7,26 @@ import {
   TrendingUp,
   CheckCircle2,
   Check,
-  ChevronRight
+  ChevronRight,
+  Sparkles,
+  XCircle,
+  Eye
 } from 'lucide-react';
+import ApprovalDetailModal from '../modals/ApprovalDetailModal';
+import LogDetailModal from '../modals/LogDetailModal';
 
 export default function DashboardTab({
   dashboard,
   onSwitchTab,
   onApprove,
-  onReject
+  onReject,
+  onRequestChanges,
+  showToast
 }) {
+  const [selectedApproval, setSelectedApproval] = useState(null);
+  const [selectedLog, setSelectedLog] = useState(null);
+  const [dismissedUrgentIds, setDismissedUrgentIds] = useState([]);
+
   if (!dashboard) {
     return (
       <div className="p-8 text-center text-slate-400 text-sm">
@@ -33,64 +44,102 @@ export default function DashboardTab({
       value: stats?.total_orders ?? 0,
       icon: ShoppingBag,
       color: 'text-brand-400',
-      bg: 'bg-brand-500/10 border-brand-500/20'
+      bg: 'bg-brand-500/10 border-brand-500/20 hover:border-brand-500/50',
+      tab: 'orders',
+      params: {}
     },
     {
       title: 'Pending Fulfillment',
       value: stats?.pending_orders ?? 0,
       icon: Clock,
       color: 'text-amber-400',
-      bg: 'bg-amber-500/10 border-amber-500/20'
+      bg: 'bg-amber-500/10 border-amber-500/20 hover:border-amber-500/50',
+      tab: 'orders',
+      params: { filter: 'Pending' }
     },
     {
       title: 'Low Stock Risks',
       value: stats?.low_stock_count ?? 0,
       icon: AlertTriangle,
       color: 'text-rose-400',
-      bg: 'bg-rose-500/10 border-rose-500/20'
+      bg: 'bg-rose-500/10 border-rose-500/20 hover:border-rose-500/50',
+      tab: 'inventory',
+      params: { filter: 'risk' }
     },
     {
       title: 'Khata Outstanding',
       value: `₹${(stats?.outstanding_payments || 0).toLocaleString('en-IN')}`,
       icon: CreditCard,
       color: 'text-sky-400',
-      bg: 'bg-sky-500/10 border-sky-500/20'
+      bg: 'bg-sky-500/10 border-sky-500/20 hover:border-sky-500/50',
+      tab: 'invoices',
+      params: { filter: 'overdue' }
     },
     {
       title: "Today's Revenue",
       value: `₹${(stats?.today_revenue || 0).toLocaleString('en-IN')}`,
       icon: TrendingUp,
       color: 'text-emerald-400',
-      bg: 'bg-emerald-500/10 border-emerald-500/20'
+      bg: 'bg-emerald-500/10 border-emerald-500/20 hover:border-emerald-500/50',
+      tab: 'orders',
+      params: { filter: 'Paid' }
     },
     {
       title: 'Auto-Handled Tasks',
       value: stats?.auto_completed_tasks ?? 0,
       icon: CheckCircle2,
       color: 'text-purple-400',
-      bg: 'bg-purple-500/10 border-purple-500/20'
+      bg: 'bg-purple-500/10 border-purple-500/20 hover:border-purple-500/50',
+      tab: 'activity',
+      params: {}
     }
   ];
 
+  const activeUrgentItems = (priority?.urgent || []).filter(
+    (_, idx) => !dismissedUrgentIds.includes(idx)
+  );
+
+  const handleDismissUrgent = (idx, e) => {
+    e.stopPropagation();
+    setDismissedUrgentIds((prev) => [...prev, idx]);
+    if (showToast) {
+      showToast('Risk Dismissed', 'Item acknowledged and cleared from triage view.', 'info');
+    }
+  };
+
+  const handleUrgentAction = (item) => {
+    if (item.type === 'stockout_risk') {
+      onSwitchTab('inventory', { filter: 'risk' });
+    } else if (item.type === 'payment_overdue') {
+      onSwitchTab('invoices', { filter: 'overdue' });
+    } else {
+      onSwitchTab('approvals');
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
-      {/* Top 6 KPI Metric Cards */}
+      {/* Top 6 KPI Metric Cards (Interactive) */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
         {statCards.map((card, idx) => {
           const Icon = card.icon;
           return (
-            <div
+            <button
               key={idx}
-              className={`p-4 rounded-xl border ${card.bg} bg-surface-900/80 backdrop-blur transition hover:border-slate-700 flex flex-col justify-between`}
+              onClick={() => onSwitchTab(card.tab, card.params)}
+              className={`p-4 rounded-xl border ${card.bg} bg-surface-900/80 backdrop-blur transition hover:scale-[1.02] cursor-pointer flex flex-col justify-between text-left group`}
+              title={`Click to view ${card.title} details`}
             >
-              <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-                <span className="font-medium truncate">{card.title}</span>
+              <div className="flex items-center justify-between text-xs text-slate-400 mb-2 w-full">
+                <span className="font-medium truncate group-hover:text-slate-200 transition">
+                  {card.title}
+                </span>
                 <Icon className={`w-4 h-4 shrink-0 ${card.color}`} />
               </div>
               <div className="text-xl font-bold font-mono text-white tracking-tight">
                 {card.value}
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -98,139 +147,170 @@ export default function DashboardTab({
       {/* 3-Column Daily Operations Triage Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Column 1: 🔴 Urgent Action Items */}
-        <div className="p-5 rounded-2xl bg-surface-900/70 border border-rose-900/40 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
-              <h3 className="font-bold text-sm text-white">Critical & Urgent Risks</h3>
-            </div>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-              {priority?.urgent?.length ?? 0} Items
-            </span>
-          </div>
-
-          <div className="space-y-2.5">
-            {priority?.urgent?.length === 0 ? (
-              <div className="text-center py-8 text-slate-500 text-xs">
-                <CheckCircle2 className="w-6 h-6 mx-auto mb-1 text-emerald-500/60" />
-                No critical risks detected.
+        <div className="p-5 rounded-2xl bg-surface-900/70 border border-rose-900/40 space-y-4 flex flex-col justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+                <h3 className="font-bold text-sm text-white">Critical & Urgent Risks</h3>
               </div>
-            ) : (
-              priority?.urgent?.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="p-3 rounded-xl bg-surface-950/80 border border-rose-900/50 hover:border-rose-700 transition flex flex-col justify-between gap-2"
-                >
-                  <div>
-                    <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 mb-1">
-                      {item.type === 'stockout_risk' ? 'STOCKOUT IMMINENT' : 'PAYMENT OVERDUE'}
-                    </span>
-                    <h4 className="font-bold text-white text-xs">{item.title}</h4>
-                    <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">{item.detail}</p>
-                  </div>
-                  <div className="flex items-center justify-end pt-1">
-                    <button
-                      onClick={() => onSwitchTab('approvals')}
-                      className="bg-rose-600/30 hover:bg-rose-600/50 text-rose-200 border border-rose-500/40 text-[11px] font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1 cursor-pointer"
-                    >
-                      <span>{item.action_label}</span>
-                      <ChevronRight className="w-3 h-3" />
-                    </button>
-                  </div>
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                {activeUrgentItems.length} Items
+              </span>
+            </div>
+
+            <div className="space-y-2.5">
+              {activeUrgentItems.length === 0 ? (
+                <div className="text-center py-8 text-slate-500 text-xs">
+                  <CheckCircle2 className="w-6 h-6 mx-auto mb-1 text-emerald-500/60" />
+                  No critical risks detected.
                 </div>
-              ))
-            )}
+              ) : (
+                activeUrgentItems.map((item, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => handleUrgentAction(item)}
+                    className="p-3 rounded-xl bg-surface-950/80 border border-rose-900/50 hover:border-rose-600 transition flex flex-col justify-between gap-2 cursor-pointer group"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                          {item.type === 'stockout_risk' ? 'STOCKOUT IMMINENT' : 'PAYMENT OVERDUE'}
+                        </span>
+                        <button
+                          onClick={(e) => handleDismissUrgent(idx, e)}
+                          className="text-slate-500 hover:text-slate-300 text-[10px] cursor-pointer"
+                          title="Acknowledge & dismiss from view"
+                        >
+                          Dismiss ✕
+                        </button>
+                      </div>
+                      <h4 className="font-bold text-white text-xs group-hover:text-rose-200 transition">
+                        {item.title}
+                      </h4>
+                      <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">{item.detail}</p>
+                    </div>
+                    <div className="flex items-center justify-end pt-1">
+                      <span className="bg-rose-600/30 hover:bg-rose-600/50 text-rose-200 border border-rose-500/40 text-[11px] font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+                        <span>{item.action_label || 'Resolve Issue'}</span>
+                        <ChevronRight className="w-3 h-3" />
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
 
         {/* Column 2: 🟡 Needs Owner Approval */}
-        <div className="p-5 rounded-2xl bg-surface-900/70 border border-amber-900/40 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-              <h3 className="font-bold text-sm text-white">Pending Owner Approvals</h3>
-            </div>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-              {priority?.needs_approval?.length ?? 0} Pending
-            </span>
-          </div>
-
-          <div className="space-y-2.5">
-            {priority?.needs_approval?.length === 0 ? (
-              <div className="text-center py-8 text-slate-500 text-xs">
-                <CheckCircle2 className="w-6 h-6 mx-auto mb-1 text-emerald-500/60" />
-                All pending approvals resolved.
+        <div className="p-5 rounded-2xl bg-surface-900/70 border border-amber-900/40 space-y-4 flex flex-col justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                <h3 className="font-bold text-sm text-white">Pending Owner Approvals</h3>
               </div>
-            ) : (
-              priority?.needs_approval?.map((app, idx) => (
-                <div
-                  key={idx}
-                  className="p-3 rounded-xl bg-surface-950/80 border border-amber-900/50 hover:border-amber-700 transition flex flex-col justify-between gap-2"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                        {app.type}
-                      </span>
-                      {app.amount && (
-                        <span className="text-xs font-mono font-bold text-white">
-                          ₹{app.amount.toLocaleString('en-IN')}
-                        </span>
-                      )}
-                    </div>
-                    <h4 className="font-bold text-white text-xs">{app.title}</h4>
-                    <p className="text-[11px] text-slate-300 mt-1 line-clamp-2">{app.recommendation}</p>
-                  </div>
-                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800/80">
-                    <button
-                      onClick={() => onReject(app.id)}
-                      className="text-slate-400 hover:text-rose-400 text-[11px] px-2 py-1 rounded transition cursor-pointer"
-                    >
-                      Reject
-                    </button>
-                    <button
-                      onClick={() => onApprove(app.id)}
-                      className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-bold px-3 py-1 rounded-lg transition shadow-md flex items-center gap-1 cursor-pointer"
-                    >
-                      <Check className="w-3 h-3" /> Approve
-                    </button>
-                  </div>
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                {priority?.needs_approval?.length ?? 0} Pending
+              </span>
+            </div>
+
+            <div className="space-y-2.5">
+              {priority?.needs_approval?.length === 0 ? (
+                <div className="text-center py-8 text-slate-500 text-xs">
+                  <CheckCircle2 className="w-6 h-6 mx-auto mb-1 text-emerald-500/60" />
+                  All pending approvals resolved.
                 </div>
-              ))
-            )}
+              ) : (
+                priority?.needs_approval?.map((app, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3 rounded-xl bg-surface-950/80 border border-amber-900/50 hover:border-amber-700 transition flex flex-col justify-between gap-2"
+                  >
+                    <div
+                      onClick={() => setSelectedApproval(app)}
+                      className="cursor-pointer group"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          {app.type}
+                        </span>
+                        {app.amount && (
+                          <span className="text-xs font-mono font-bold text-white">
+                            ₹{Number(app.amount).toLocaleString('en-IN')}
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="font-bold text-white text-xs group-hover:text-amber-200 transition">
+                        {app.title}
+                      </h4>
+                      <p className="text-[11px] text-slate-300 mt-1 line-clamp-2">{app.recommendation}</p>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                      <button
+                        onClick={() => setSelectedApproval(app)}
+                        className="text-brand-400 hover:text-brand-300 text-[11px] font-medium flex items-center gap-1 cursor-pointer"
+                      >
+                        <Eye className="w-3 h-3" /> Inspect PO
+                      </button>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => onReject(app.id)}
+                          className="text-slate-400 hover:text-rose-400 text-[11px] px-2 py-1 rounded transition cursor-pointer"
+                        >
+                          Reject
+                        </button>
+                        <button
+                          onClick={() => onApprove(app.id)}
+                          className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-bold px-3 py-1 rounded-lg transition shadow-md flex items-center gap-1 cursor-pointer"
+                        >
+                          <Check className="w-3 h-3" /> Approve
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
 
         {/* Column 3: 🟢 Automatically Handled Tasks */}
-        <div className="p-5 rounded-2xl bg-surface-900/70 border border-emerald-900/40 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-              <h3 className="font-bold text-sm text-white">Autonomously Handled</h3>
-            </div>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-              {priority?.auto_handled?.length ?? 0} Done
-            </span>
-          </div>
-
-          <div className="space-y-2.5">
-            {priority?.auto_handled?.slice(0, 4).map((log, idx) => (
-              <div
-                key={idx}
-                className="p-2.5 rounded-xl bg-surface-950/60 border border-emerald-900/30 flex items-start gap-2.5"
-              >
-                <div className="p-1 rounded bg-emerald-500/20 text-emerald-400 shrink-0 mt-0.5">
-                  <Check className="w-3 h-3" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between text-[11px]">
-                    <strong className="text-white font-medium truncate">{log.title}</strong>
-                    <span className="text-slate-500 text-[10px] font-mono">{log.time_display}</span>
-                  </div>
-                  <p className="text-[11px] text-slate-400 truncate mt-0.5">{log.detail}</p>
-                </div>
+        <div className="p-5 rounded-2xl bg-surface-900/70 border border-emerald-900/40 space-y-4 flex flex-col justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                <h3 className="font-bold text-sm text-white">Autonomously Handled</h3>
               </div>
-            ))}
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                {priority?.auto_handled?.length ?? 0} Done
+              </span>
+            </div>
+
+            <div className="space-y-2.5">
+              {priority?.auto_handled?.slice(0, 4).map((log, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => setSelectedLog(log)}
+                  className="p-2.5 rounded-xl bg-surface-950/60 border border-emerald-900/30 hover:border-emerald-700/50 flex items-start gap-2.5 cursor-pointer transition"
+                >
+                  <div className="p-1 rounded bg-emerald-500/20 text-emerald-400 shrink-0 mt-0.5">
+                    <Check className="w-3 h-3" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <strong className="text-white font-medium truncate">{log.title}</strong>
+                      <span className="text-slate-500 text-[10px] font-mono">{log.time_display}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 truncate mt-0.5">{log.detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -246,22 +326,34 @@ export default function DashboardTab({
             {daily_summary?.highest_priority_recommendation || 'All daily operations running smoothly.'}
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
-            <div className="p-2.5 rounded-lg bg-surface-900/80 border border-slate-800 text-center">
+            <button
+              onClick={() => onSwitchTab('orders')}
+              className="p-2.5 rounded-lg bg-surface-900/80 hover:bg-slate-800 border border-slate-800 text-center transition cursor-pointer"
+            >
               <span className="text-[10px] text-slate-400 block">Orders Processed</span>
               <strong className="text-white text-sm font-mono">{daily_summary?.orders_processed ?? 0}</strong>
-            </div>
-            <div className="p-2.5 rounded-lg bg-surface-900/80 border border-slate-800 text-center">
+            </button>
+            <button
+              onClick={() => onSwitchTab('inventory', { filter: 'risk' })}
+              className="p-2.5 rounded-lg bg-surface-900/80 hover:bg-slate-800 border border-slate-800 text-center transition cursor-pointer"
+            >
               <span className="text-[10px] text-slate-400 block">Low Stock Risks</span>
               <strong className="text-rose-400 text-sm font-mono">{daily_summary?.low_stock_risks ?? 0}</strong>
-            </div>
-            <div className="p-2.5 rounded-lg bg-surface-900/80 border border-slate-800 text-center">
+            </button>
+            <button
+              onClick={() => onSwitchTab('invoices', { filter: 'overdue' })}
+              className="p-2.5 rounded-lg bg-surface-900/80 hover:bg-slate-800 border border-slate-800 text-center transition cursor-pointer"
+            >
               <span className="text-[10px] text-slate-400 block">Overdue Invoices</span>
               <strong className="text-amber-400 text-sm font-mono">{daily_summary?.overdue_payments ?? 0}</strong>
-            </div>
-            <div className="p-2.5 rounded-lg bg-surface-900/80 border border-slate-800 text-center">
+            </button>
+            <button
+              onClick={() => onSwitchTab('activity')}
+              className="p-2.5 rounded-lg bg-surface-900/80 hover:bg-slate-800 border border-slate-800 text-center transition cursor-pointer"
+            >
               <span className="text-[10px] text-slate-400 block">Tasks Automated</span>
               <strong className="text-emerald-400 text-sm font-mono">{daily_summary?.tasks_auto_completed ?? 0}</strong>
-            </div>
+            </button>
           </div>
         </div>
 
@@ -280,7 +372,8 @@ export default function DashboardTab({
             {recent_logs?.slice(0, 4).map((log, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between py-1.5 border-b border-slate-800/60 last:border-0 text-xs"
+                onClick={() => setSelectedLog(log)}
+                className="flex items-center justify-between py-1.5 border-b border-slate-800/60 last:border-0 text-xs hover:bg-slate-800/40 px-1 rounded transition cursor-pointer"
               >
                 <div className="flex items-center gap-2 truncate">
                   <span
@@ -300,6 +393,23 @@ export default function DashboardTab({
           </div>
         </div>
       </div>
+
+      {/* Modals for Details */}
+      <ApprovalDetailModal
+        isOpen={!!selectedApproval}
+        onClose={() => setSelectedApproval(null)}
+        approval={selectedApproval}
+        onApprove={onApprove}
+        onReject={onReject}
+        onRequestChanges={onRequestChanges}
+        showToast={showToast}
+      />
+
+      <LogDetailModal
+        isOpen={!!selectedLog}
+        onClose={() => setSelectedLog(null)}
+        log={selectedLog}
+      />
     </div>
   );
 }

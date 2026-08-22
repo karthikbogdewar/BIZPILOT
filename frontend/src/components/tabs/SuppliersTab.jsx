@@ -5,17 +5,27 @@ import {
   TrendingDown,
   CheckCircle,
   Award,
-  Sparkles
+  Sparkles,
+  Search,
+  Eye
 } from 'lucide-react';
+import SupplierDetailModal from '../modals/SupplierDetailModal';
 
 export default function SuppliersTab({
-  suppliers,
+  suppliers = [],
   onOpenNegotiate,
-  selectedProduct,
-  products
+  selectedProduct = null,
+  products = []
 }) {
   const [currentPid, setCurrentPid] = useState(selectedProduct || 'PRD-101');
   const [comparison, setComparison] = useState(null);
+  const [selectedSupplierForModal, setSelectedSupplierForModal] = useState(null);
+
+  useEffect(() => {
+    if (selectedProduct) {
+      setCurrentPid(selectedProduct);
+    }
+  }, [selectedProduct]);
 
   useEffect(() => {
     fetchComparison(currentPid);
@@ -33,7 +43,7 @@ export default function SuppliersTab({
     }
   };
 
-  const productList = products || [
+  const productList = products && products.length > 0 ? products : [
     { id: 'PRD-101', name: 'Boat BassHeads Earphones' },
     { id: 'PRD-102', name: '65W Fast GaN Charger' },
     { id: 'PRD-107', name: 'Redmi Note 13 5G Smartphone' },
@@ -55,16 +65,16 @@ export default function SuppliersTab({
         </div>
 
         {/* Product SKU Selector */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex items-center gap-2 self-start sm:self-auto bg-surface-900 border border-slate-800 px-3 py-1.5 rounded-xl">
           <span className="text-xs text-slate-400 font-mono">Evaluate SKU:</span>
           <select
             value={currentPid}
             onChange={(e) => setCurrentPid(e.target.value)}
-            className="bg-surface-900 border border-slate-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium focus:outline-none focus:border-brand-500 cursor-pointer"
+            className="bg-surface-950 border border-slate-700 text-white text-xs px-3 py-1 rounded-lg font-medium focus:outline-none focus:border-brand-500 cursor-pointer"
           >
             {productList.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.name}
+                {p.name} ({p.id})
               </option>
             ))}
           </select>
@@ -99,7 +109,7 @@ export default function SuppliersTab({
       {/* Supplier Comparison Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {(comparison?.suppliers || suppliers || []).map((s, idx) => {
-          const isBest = comparison?.best_choice?.supplier_id === s.supplier_id;
+          const isBest = comparison?.best_choice?.supplier_id === (s.supplier_id || s.id);
           return (
             <div
               key={idx}
@@ -120,7 +130,7 @@ export default function SuppliersTab({
                 <div className="space-y-1.5 text-xs">
                   <div className="flex justify-between text-slate-400">
                     <span>Unit Price:</span>
-                    <strong className="text-white font-mono">₹{s.unit_price}</strong>
+                    <strong className="text-white font-mono">₹{s.unit_price || s.price}</strong>
                   </div>
                   <div className="flex justify-between text-slate-400">
                     <span>Lead Time:</span>
@@ -132,7 +142,7 @@ export default function SuppliersTab({
                   </div>
                   <div className="flex justify-between text-slate-400">
                     <span>Credit Terms:</span>
-                    <span className="text-emerald-400 font-mono">{s.credit_days} days</span>
+                    <span className="text-emerald-400 font-mono">{s.credit_days || 15} days</span>
                   </div>
                   <div className="flex justify-between text-slate-400">
                     <span>Reliability Score:</span>
@@ -141,19 +151,34 @@ export default function SuppliersTab({
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-800/80">
+              <div className="pt-2 border-t border-slate-800/80 flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedSupplierForModal(s)}
+                  className="p-1.5 rounded-lg bg-surface-950 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-700 transition cursor-pointer"
+                  title="Inspect Supplier Details"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                </button>
                 <button
                   onClick={() => onOpenNegotiate(s)}
-                  className="w-full bg-surface-950 hover:bg-brand-600/30 text-brand-300 hover:text-white border border-slate-800 hover:border-brand-500/40 text-xs font-semibold py-1.5 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="flex-1 bg-surface-950 hover:bg-brand-600/30 text-brand-300 hover:text-white border border-slate-800 hover:border-brand-500/40 text-xs font-semibold py-1.5 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Zap className="w-3.5 h-3.5" />
-                  <span>Negotiate Discount</span>
+                  <span>Negotiate</span>
                 </button>
               </div>
             </div>
           );
         })}
       </div>
+
+      {/* Supplier Detail Modal */}
+      <SupplierDetailModal
+        isOpen={!!selectedSupplierForModal}
+        onClose={() => setSelectedSupplierForModal(null)}
+        supplier={selectedSupplierForModal}
+        onOpenNegotiate={onOpenNegotiate}
+      />
     </div>
   );
 }

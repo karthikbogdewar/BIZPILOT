@@ -80,6 +80,27 @@ class BranchTransferRequest(BaseModel):
     source_branch: str
     target_branch: str
 
+class CreateOrderRequest(BaseModel):
+    customer_name: str
+    customer_phone: Optional[str] = "+91 98765 43210"
+    items: Optional[List[Dict[str, Any]]] = None
+    items_summary: Optional[str] = None
+    total_amount: Optional[float] = None
+    channel: Optional[str] = "Manual"
+    payment_status: Optional[str] = "Pending"
+    status: Optional[str] = "Confirmed"
+
+class UpdateOrderStatusRequest(BaseModel):
+    status: Optional[str] = None
+    payment_status: Optional[str] = None
+
+class UpdateStockRequest(BaseModel):
+    stock_delta: Optional[int] = None
+    new_stock: Optional[int] = None
+
+class RequestChangesApprovalRequest(BaseModel):
+    feedback: Optional[str] = "Changes requested by Business Owner"
+
 @app.on_event("startup")
 def startup_event():
     telegram_service.start_background_poller(interval_seconds=1.0)
@@ -257,12 +278,48 @@ def get_products():
     return products
 
 @app.get("/api/products/{product_id}/suppliers")
+@app.get("/api/suppliers/compare/{product_id}")
 def get_product_supplier_comparison(product_id: str):
     """Compares all suppliers for a specific product using multi-criteria matrix."""
     comp = agent_service.compare_suppliers_for_product(product_id)
     if not comp:
         raise HTTPException(status_code=404, detail="Product or suppliers not found")
     return comp
+
+@app.patch("/api/products/{product_id}/stock")
+def update_product_stock(product_id: str, req: UpdateStockRequest):
+    """Directly adjusts product stock levels and recalculates runout days."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    p = cursor.execute("SELECT * FROM products WHERE id = ?", (product_id,)).fetchone()
+    if not p:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    current_stock = p["stock"]
+    if req.new_stock is not None:
+        new_stock = max(0, req.new_stock)
+    elif req.stock_delta is not None:
+        new_stock = max(0, current_stock + req.stock_delta)
+    else:
+        conn.close()
+        raise HTTPException(status_code=400, detail="Must provide stock_delta or new_stock")
+    
+    cursor.execute("UPDATE products SET stock = ? WHERE id = ?", (new_stock, product_id))
+    
+    now = datetime.now()
+    cursor.execute("""
+        INSERT INTO activity_logs (timestamp, time_display, category, severity, title, detail, automated)
+        VALUES (?, ?, 'Inventory', 'info', ?, ?, 0)
+    """, (
+        now.strftime('%Y-%m-%d %H:%M:%S'),
+        now.strftime('%I:%M %p'),
+        f"Manual Stock Update: {p['name']}",
+        f"Stock adjusted from {current_stock} to {new_stock} units by Business Owner."
+    ))
+    conn.commit()
+    conn.close()
+    return {"success": True, "product_id": product_id, "previous_stock": current_stock, "new_stock": new_stock}
 
 @app.get("/api/suppliers")
 def get_suppliers():
@@ -296,7 +353,136 @@ def get_orders():
                 o['items'] = []
     return orders
 
+@app.post("/api/orders")
+def create_manual_order(req: CreateOrderRequest):
+    """Manually creates a new customer order, creates an invoice, and deducts inventory stock."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    count_row = cursor.execute("SELECT COUNT(*) as cnt FROM orders").fetchone()
+    order_num = 1000 + (count_row['cnt'] if count_row else 1) + 1
+    order_id = f"ORD-{order_num}"
+    
+    items = req.items or []
+    total_amount = req.total_amount or 0.0
+    items_summary = req.items_summary or ""
+    
+    if items and not items_summary:
+        items_summary = ", ".join([f"{it.get('qty', 1)}x {it.get('name', 'Item')}" for it in items])
+    if items and not total_amount:
+        total_amount = sum(float(it.get('price', 0)) * int(it.get('qty', 1)) for it in items)
+    
+    if not items_summary:
+        items_summary = "Custom Manual Order"
+    
+    now = datetime.now()
+    created_at = now.strftime('%Y-%m-%d %H:%M:%S')
+    customer_id = "CUST-WALKIN"
+    
+    cursor.execute("""
+        INSERT INTO orders (id, customer_id, customer_name, total_amount, payment_status, order_status, channel, raw_message, created_at, items_json)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        order_id,
+        customer_id,
+        req.customer_name,
+        total_amount,
+        req.payment_status or "Pending",
+        req.status or "Confirmed",
+        req.channel or "In-Store",
+        items_summary,
+        created_at,
+        json.dumps(items)
+    ))
+    
+    for it in items:
+        pid = it.get('product_id')
+        qty = int(it.get('qty', 1))
+        if pid:
+            cursor.execute("UPDATE products SET stock = MAX(0, stock - ?) WHERE id = ?", (qty, pid))
+            
+    inv_id = f"INV-{order_num}"
+    due_date = now.strftime('%Y-%m-%d')
+    cursor.execute("""
+        INSERT INTO invoices (id, order_id, customer_id, customer_name, amount, due_date, created_date, status, reminder_sent, reminder_draft)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NULL)
+    """, (
+        inv_id,
+        order_id,
+        customer_id,
+        req.customer_name,
+        total_amount,
+        due_date,
+        created_at,
+        req.payment_status or "Pending"
+    ))
+    
+    cursor.execute("""
+        INSERT INTO activity_logs (timestamp, time_display, category, severity, title, detail, automated)
+        VALUES (?, ?, 'Orders', 'success', ?, ?, 0)
+    """, (
+        created_at,
+        now.strftime('%I:%M %p'),
+        f"New Order Created: {order_id}",
+        f"Order for {req.customer_name} of ₹{total_amount:,.2f} recorded via {req.channel}."
+    ))
+    
+    conn.commit()
+    conn.close()
+    
+    return {
+        "success": True,
+        "order_id": order_id,
+        "invoice_id": inv_id,
+        "customer_name": req.customer_name,
+        "total_amount": total_amount,
+        "items_summary": items_summary,
+        "status": req.status or "Confirmed"
+    }
+
+@app.patch("/api/orders/{order_id}/status")
+def update_order_status(order_id: str, req: UpdateOrderStatusRequest):
+    """Updates status or payment status of an order."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        order = cursor.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+            
+        updates = []
+        params = []
+        if req.status:
+            updates.append("order_status = ?")
+            params.append(req.status)
+        if req.payment_status:
+            updates.append("payment_status = ?")
+            params.append(req.payment_status)
+            if req.payment_status == 'Paid':
+                cursor.execute("UPDATE invoices SET status = 'Paid' WHERE order_id = ?", (order_id,))
+                
+        if updates:
+            params.append(order_id)
+            cursor.execute(f"UPDATE orders SET {', '.join(updates)} WHERE id = ?", params)
+            
+            now = datetime.now()
+            cursor.execute("""
+                INSERT INTO activity_logs (timestamp, time_display, category, severity, title, detail, automated)
+                VALUES (?, ?, 'Orders', 'info', ?, ?, 0)
+            """, (
+                now.strftime('%Y-%m-%d %H:%M:%S'),
+                now.strftime('%I:%M %p'),
+                f"Order Status Updated: {order_id}",
+                f"Order {order_id} status updated to {req.status or order['order_status']}."
+            ))
+            conn.commit()
+            
+        return {"success": True, "order_id": order_id, "status": req.status or order['order_status']}
+    finally:
+        conn.close()
+
 @app.post("/api/orders/simulate-message")
+@app.post("/api/customer/message")
 def simulate_customer_message(req: CustomerMessageRequest):
     """Simulates receiving a WhatsApp or unstructured customer message for the AI agent to parse and fulfill."""
     result = agent_service.parse_and_process_customer_message(
@@ -345,7 +531,35 @@ def reject_request(approval_id: str, req: Optional[RejectApprovalRequest] = None
     reason = req.reason if req else "Rejected by Business Owner"
     return agent_service.reject_action(approval_id, reason)
 
+@app.post("/api/approvals/{approval_id}/request-changes")
+def request_changes_approval(approval_id: str, req: Optional[RequestChangesApprovalRequest] = None):
+    """Business owner requests modifications or changes for a pending decision."""
+    feedback = req.feedback if req else "Changes requested by Business Owner"
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        app_item = cursor.execute("SELECT * FROM approvals WHERE id = ?", (approval_id,)).fetchone()
+        if not app_item:
+            raise HTTPException(status_code=404, detail="Approval request not found")
+            
+        cursor.execute("UPDATE approvals SET status = 'Changes Requested' WHERE id = ?", (approval_id,))
+        now = datetime.now()
+        cursor.execute("""
+            INSERT INTO activity_logs (timestamp, time_display, category, severity, title, detail, automated)
+            VALUES (?, ?, 'Approvals', 'warning', ?, ?, 0)
+        """, (
+            now.strftime('%Y-%m-%d %H:%M:%S'),
+            now.strftime('%I:%M %p'),
+            f"Changes Requested: {approval_id}",
+            f"Owner requested revisions on '{app_item['title']}': {feedback}"
+        ))
+        conn.commit()
+        return {"success": True, "approval_id": approval_id, "status": "Changes Requested", "feedback": feedback}
+    finally:
+        conn.close()
+
 @app.get("/api/activity-logs")
+@app.get("/api/activity/logs")
 def get_activity_logs(category: Optional[str] = None):
     """Returns AI activity stream."""
     conn = get_db_connection()
@@ -363,7 +577,6 @@ def trigger_agent_scan():
     result = agent_service.run_full_operations_scan()
     return result
 
-@app.post("/api/agent/command")
 class VoiceQueryRequest(BaseModel):
     transcript: str
     language: Optional[str] = "en"
@@ -626,6 +839,7 @@ def ai_voice_query(req: VoiceQueryRequest):
     }
 
 @app.post("/api/simulator/what-if")
+@app.post("/api/simulation/what-if")
 def simulate_what_if_scenario(req: WhatIfSimulationRequest):
     """
     Digital Twin Stress Test Simulator:
@@ -684,7 +898,13 @@ def simulate_what_if_scenario(req: WhatIfSimulationRequest):
     projected_receivables = sum(i["amount"] for i in invoices if i["status"] != "Paid")
     simulated_runway_days = round((current_cash - total_contingency_cost) / (4500.0 * multiplier), 1)
 
+    estimated_revenue = sum(p["unit_price"] * (p["avg_daily_sales"] * multiplier * 15) for p in products)
+
     return {
+        "skus_at_risk": critical_stockouts_count,
+        "total_skus": len(products),
+        "required_capital_buffer": total_contingency_cost,
+        "estimated_festive_revenue": round(estimated_revenue, 2),
         "simulation_parameters": {
             "demand_multiplier": f"{int((multiplier - 1.0) * 100):+d}% (Factor {multiplier}x)",
             "supplier_lead_time_added": f"+{extra_lead} days",
@@ -700,6 +920,8 @@ def simulate_what_if_scenario(req: WhatIfSimulationRequest):
         "skus": simulation_results
     }
 
+@app.post("/api/ai/command-query")
+@app.post("/api/agent/command")
 def ai_command_center(req: CommandQueryRequest):
     """AI natural language command center querying actual business database."""
     answer = agent_service.answer_command_query(req.query)

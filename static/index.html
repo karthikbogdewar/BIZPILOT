@@ -176,67 +176,62 @@
     <!-- MAIN CONTENT AREA -->
     <main class="flex-1 flex flex-col overflow-y-auto bg-surface-950">
       
-      <!-- TOP HEADER BAR -->
-      <header class="bg-surface-900/60 backdrop-blur-md border-b border-slate-800/80 px-6 py-3.5 flex items-center justify-between sticky top-0 z-10">
-        <div class="flex items-center gap-3">
-          <div class="flex flex-col">
-            <h1 id="page-title" class="text-lg font-bold text-white flex items-center gap-2">
-              Operational Command Dashboard
-            </h1>
-            <span class="text-xs text-slate-400 flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              Business: <strong class="text-slate-200 font-semibold" id="header-business-name">Sri Lakshmi Electronics</strong>
-              <span class="text-slate-500">|</span> Owner: <span id="header-owner-name" class="text-slate-300">Karthik Sharma</span>
-            </span>
+      <!-- TOP HEADER BAR (Sleek, Compact, High-End SaaS Navbar) -->
+      <header class="bg-surface-900/80 backdrop-blur-md border-b border-slate-800/80 px-5 py-2.5 h-14 flex items-center justify-between sticky top-0 z-20">
+        <div class="flex items-center gap-3 min-w-0">
+          <h1 id="page-title" class="text-sm font-bold text-white tracking-tight truncate">
+            Operational Command Dashboard
+          </h1>
+          <div class="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-400 font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="header-business-name" class="font-semibold">Sri Lakshmi Electronics</span>
           </div>
         </div>
 
-        <!-- Quick Action Buttons & Language Switcher -->
-        <div class="flex items-center gap-2.5">
-          <!-- Multilingual Indic Switcher -->
-          <div class="flex items-center bg-surface-950 border border-slate-800 rounded-lg p-0.5 text-xs font-semibold" title="Switch Dashboard & Agent Language">
-            <button onclick="setDashboardLanguage('en')" id="lang-btn-en" class="lang-btn px-2 py-1 rounded-md text-white bg-slate-800 transition cursor-pointer">EN</button>
-            <button onclick="setDashboardLanguage('hi')" id="lang-btn-hi" class="lang-btn px-2 py-1 rounded-md text-slate-400 hover:text-white transition cursor-pointer">हिं</button>
-            <button onclick="setDashboardLanguage('te')" id="lang-btn-te" class="lang-btn px-2 py-1 rounded-md text-slate-400 hover:text-white transition cursor-pointer">తె</button>
-            <button onclick="setDashboardLanguage('kn')" id="lang-btn-kn" class="lang-btn px-2 py-1 rounded-md text-slate-400 hover:text-white transition cursor-pointer">ಕ</button>
-            <button onclick="setDashboardLanguage('ta')" id="lang-btn-ta" class="lang-btn px-2 py-1 rounded-md text-slate-400 hover:text-white transition cursor-pointer">த</button>
+        <!-- Quick Action Hub (Sleek, Compact, No Overcrowding) -->
+        <div class="flex items-center gap-2 shrink-0">
+          <!-- Compact Language Selector -->
+          <div class="flex items-center bg-surface-950 border border-slate-800 rounded-lg p-0.5 text-[11px] font-semibold">
+            <button onclick="setDashboardLanguage('en')" id="lang-btn-en" class="lang-btn px-1.5 py-0.5 rounded text-white bg-slate-800 transition cursor-pointer">EN</button>
+            <button onclick="setDashboardLanguage('hi')" id="lang-btn-hi" class="lang-btn px-1.5 py-0.5 rounded text-slate-400 hover:text-white transition cursor-pointer">हिं</button>
+            <button onclick="setDashboardLanguage('te')" id="lang-btn-te" class="lang-btn px-1.5 py-0.5 rounded text-slate-400 hover:text-white transition cursor-pointer">తె</button>
+            <button onclick="setDashboardLanguage('kn')" id="lang-btn-kn" class="lang-btn px-1.5 py-0.5 rounded text-slate-400 hover:text-white transition cursor-pointer">ಕ</button>
+            <button onclick="setDashboardLanguage('ta')" id="lang-btn-ta" class="lang-btn px-1.5 py-0.5 rounded text-slate-400 hover:text-white transition cursor-pointer">த</button>
           </div>
 
-          <!-- Indic Voice AI Assistant Button -->
-          <button onclick="toggleVoiceAssistant()" id="voice-assistant-btn" class="bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer relative" title="Speak to Voice AI in Telugu/Hindi/English">
+          <!-- Indic Voice AI Button -->
+          <button onclick="toggleVoiceAssistant()" id="voice-assistant-btn" class="bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer relative" title="Speak to Voice AI in Telugu/Hindi/English">
             <i data-lucide="mic" id="voice-mic-icon" class="w-3.5 h-3.5 text-rose-400"></i>
-            <span id="voice-btn-text">Voice AI</span>
+            <span id="voice-btn-text" class="hidden md:inline">Voice AI</span>
             <span id="voice-pulse-ring" class="hidden absolute -top-1 -right-1 flex h-2.5 w-2.5">
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
               <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
             </span>
           </button>
 
-          <!-- 24-Hour Autonomous Shift Time Machine Button -->
-          <button onclick="openNightShiftModal()" id="night-shift-btn" class="bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/40 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer" title="Run 24-Hour Autonomous Shift Time Machine in 5 Seconds">
+          <!-- 24h Autonomous Shift Button -->
+          <button onclick="openNightShiftModal()" id="night-shift-btn" class="bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer" title="Run 24-Hour Autonomous Shift Time Machine in 5 Seconds">
             <i data-lucide="moon" class="w-3.5 h-3.5 text-purple-400"></i>
-            <span>🌙 24h Auto-Shift</span>
+            <span class="hidden md:inline">24h Shift</span>
           </button>
 
-          <button onclick="dispatchTelegramDailyBriefing()" class="bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 border border-sky-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer" title="Send Daily Briefing to your Telegram">
-            <i data-lucide="send" class="w-3.5 h-3.5 text-sky-400"></i>
-            <span>CEO Brief to Telegram</span>
-          </button>
-
-          <button onclick="openWhatsAppSimulatorModal()" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
+          <!-- Multilingual WhatsApp / Customer Chat Simulator -->
+          <button onclick="openWhatsAppSimulatorModal()" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer" title="Simulate WhatsApp & Multilingual Chat">
             <i data-lucide="message-square" class="w-3.5 h-3.5 text-emerald-400"></i>
-            <span>Simulate Multilingual Chat</span>
+            <span class="hidden md:inline">Chat</span>
           </button>
           
-          <button onclick="switchTab('approvals')" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer relative">
+          <!-- Approvals Queue Pill -->
+          <button onclick="switchTab('approvals')" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer relative" title="Pending Owner Approvals">
             <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-amber-400"></i>
-            <span>Approvals Queue</span>
-            <span id="header-approval-pill" class="ml-1 bg-amber-500 text-slate-950 px-1.5 py-0.2 rounded-full font-bold text-[10px]">2</span>
+            <span class="hidden lg:inline">Approvals</span>
+            <span id="header-approval-pill" class="bg-amber-500 text-slate-950 px-1.5 py-0.2 rounded-full font-bold text-[10px]">2</span>
           </button>
 
-          <button onclick="runHackathonDemoScenario()" class="bg-brand-600 hover:bg-brand-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-brand-500/20 transition cursor-pointer">
+          <!-- 1-Click Hero Demo Action -->
+          <button onclick="runHackathonDemoScenario()" class="bg-brand-600 hover:bg-brand-500 text-white px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-brand-500/20 transition cursor-pointer" title="Run Automated Stockout & Reorder Demo">
             <i data-lucide="zap" class="w-3.5 h-3.5 fill-current text-amber-300"></i>
-            <span>1-Click Demo</span>
+            <span>Demo</span>
           </button>
         </div>
       </header>

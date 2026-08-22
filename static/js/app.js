@@ -15,17 +15,56 @@ let state = {
 
 // Initialize on DOM load
 document.addEventListener('DOMContentLoaded', async () => {
-  if (window.lucide) {
-    lucide.createIcons();
+  try {
+    if (window.lucide) {
+      lucide.createIcons();
+    }
+    await fetchAllData();
+    initCharts();
+    
+    // Auto-refresh data every 15 seconds to simulate continuous agent background scanning
+    setInterval(async () => {
+      await fetchDashboardData(false);
+    }, 15000);
+  } catch (e) {
+    console.error('Initialization error:', e);
   }
-  await fetchAllData();
-  initCharts();
-  
-  // Auto-refresh data every 15 seconds to simulate continuous agent background scanning
-  setInterval(async () => {
-    await fetchDashboardData(false);
-  }, 15000);
 });
+
+function initCharts() {
+  try {
+    // Check if chart canvases exist
+    const revenueCanvas = document.getElementById('revenue-trend-chart');
+    if (revenueCanvas && window.Chart && !state.charts.revenue) {
+      const ctx = revenueCanvas.getContext('2d');
+      state.charts.revenue = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Today'],
+          datasets: [{
+            label: 'Daily Revenue (₹)',
+            data: [18400, 24600, 19200, 31500, 28900, 42100, 34200],
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#64748b' } },
+            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } }
+          }
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('initCharts error:', err);
+  }
+}
 
 // -------------------------------------------------------------
 // NAVIGATION & TABS
@@ -1622,10 +1661,10 @@ function startVoiceAssistant() {
 
         // Switch to AI command center and show answer
         switchTab('ai-agent');
-        const queryInput = document.getElementById('command-query-input');
+        const queryInput = document.getElementById('command-query-input') || document.getElementById('ai-command-input');
         if (queryInput) queryInput.value = transcript;
 
-        const container = document.getElementById('command-center-conversation');
+        const container = document.getElementById('command-center-conversation') || document.getElementById('ai-chat-messages');
         if (container) {
           const userMsg = document.createElement('div');
           userMsg.className = 'p-3 bg-slate-800/80 border border-slate-700 rounded-xl text-xs text-white max-w-lg self-end ml-auto';
@@ -2360,5 +2399,32 @@ async function runNightShiftSimulation() {
   }
 }
 
-
-
+// Global Window Bindings for seamless HTML onclick triggers
+window.switchTab = switchTab;
+window.setDashboardLanguage = setDashboardLanguage;
+window.toggleVoiceAssistant = toggleVoiceAssistant;
+window.openNightShiftModal = openNightShiftModal;
+window.closeNightShiftModal = closeNightShiftModal;
+window.runNightShiftSimulation = runNightShiftSimulation;
+window.openWhatsAppSimulatorModal = openWhatsAppSimulatorModal;
+window.closeWhatsAppSimulatorModal = closeWhatsAppSimulatorModal;
+window.dispatchTelegramDailyBriefing = dispatchTelegramDailyBriefing;
+window.runHackathonDemoScenario = runHackathonDemoScenario;
+window.openKhataReminderModal = openKhataReminderModal;
+window.closeKhataReminderModal = closeKhataReminderModal;
+window.sendKhataReminder = sendKhataReminder;
+window.openNegotiateModal = openNegotiateModal;
+window.closeNegotiateModal = closeNegotiateModal;
+window.runVendorNegotiation = runVendorNegotiation;
+window.openOcrModal = openOcrModal;
+window.closeOcrModal = closeOcrModal;
+window.processOcrBill = processOcrBill;
+window.commitOcrBill = commitOcrBill;
+window.loadMultiBranchData = loadMultiBranchData;
+window.executeBranchRebalance = executeBranchRebalance;
+window.compareSuppliersAndRestock = compareSuppliersAndRestock;
+window.approveAction = approveAction;
+window.rejectAction = rejectAction;
+window.executeQuickCommand = executeQuickCommand;
+window.sendAiMessage = sendAiMessage;
+window.showToast = showToast;

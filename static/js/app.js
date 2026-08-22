@@ -74,6 +74,9 @@ function switchTab(tabId) {
   if (tabId === 'inventory') renderInventoryPage();
   if (tabId === 'orders') renderOrdersPage();
   if (tabId === 'invoices') renderInvoicesPage();
+  if (tabId === 'inventory') {
+    loadMultiBranchData();
+  }
   if (tabId === 'suppliers') {
     renderSuppliersPage();
     loadSupplierComparison('PRD-101');
@@ -2037,5 +2040,325 @@ function copyKhataMessage() {
   navigator.clipboard.writeText(textarea.value);
   showToast('Copied to Clipboard', 'Khata reminder text ready to paste in WhatsApp/SMS.', 'info');
 }
+
+// -------------------------------------------------------------
+// 1. MULTI-BRANCH INVENTORY REBALANCING & TELEPORTATION
+// -------------------------------------------------------------
+async function loadMultiBranchData() {
+  const container = document.getElementById('branch-rebalance-container');
+  if (!container) return;
+
+  try {
+    const res = await fetch('/api/inventory/multi-branch');
+    const data = await res.json();
+
+    if (!data.transfer_recommendations || data.transfer_recommendations.length === 0) {
+      container.innerHTML = `
+        <div class="col-span-2 p-4 bg-surface-950 rounded-xl border border-slate-800 text-center text-slate-400 text-xs">
+          ✅ All 3 branch outlets are optimally balanced. No inter-branch arbitrage transfer required at this moment.
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = '';
+    data.transfer_recommendations.forEach(rec => {
+      const card = document.createElement('div');
+      card.className = 'p-4 rounded-xl bg-surface-950 border border-purple-500/40 flex flex-col justify-between space-y-3';
+      card.innerHTML = `
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-white">${rec.product_name}</span>
+            <span class="bg-purple-500/20 text-purple-300 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold border border-purple-500/30">Capital Saved: ₹${rec.working_capital_preserved.toLocaleString('en-IN')}</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">${rec.recommendation}</p>
+          <div class="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-slate-800 font-mono">
+            <div>
+              <span class="text-slate-400 block">Transfer ETA</span>
+              <span class="text-emerald-400 font-semibold">${rec.transfer_time}</span>
+            </div>
+            <div>
+              <span class="text-slate-400 block">Courier Cost</span>
+              <span class="text-purple-300 font-semibold">₹${rec.courier_logistics_cost} (Porter)</span>
+            </div>
+          </div>
+        </div>
+        <button onclick="executeBranchTransfer('${rec.transfer_id}', '${rec.product_id}', ${rec.transfer_quantity}, '${rec.source_branch_name}', '${rec.target_branch_name}')" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-purple-600/20 transition cursor-pointer">
+          <i data-lucide="send" class="w-3.5 h-3.5"></i>
+          <span>🚀 Execute Inter-Store Transfer (${rec.transfer_quantity} Units)</span>
+        </button>
+      `;
+      container.appendChild(card);
+    });
+
+    if (window.lucide) lucide.createIcons();
+  } catch (err) {
+    console.error('Error loading multi-branch data:', err);
+  }
+}
+
+async function executeBranchTransfer(transferId, productId, qty, src, tgt) {
+  try {
+    const res = await fetch('/api/inventory/rebalance-transfer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        transfer_id: transferId,
+        product_id: productId,
+        quantity: qty,
+        source_branch: src,
+        target_branch: tgt
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Stock Teleported! 🚚', data.message, 'success');
+      await fetchAllData();
+      await loadMultiBranchData();
+    }
+  } catch (err) {
+    showToast('Transfer Error', err.message, 'error');
+  }
+}
+
+// -------------------------------------------------------------
+// 2. AUTONOMOUS B2B VENDOR PRICE NEGOTIATION
+// -------------------------------------------------------------
+let activeNegotiationData = null;
+
+async function openNegotiationModal(productName = 'Boat BassHeads Earphones', supplierName = 'ABC Electronics Distributors', unitPrice = 425.0, qty = 20) {
+  const modal = document.getElementById('negotiate-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+
+  try {
+    const res = await fetch('/api/procurement/negotiate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        product_name: productName,
+        supplier_name: supplierName,
+        initial_unit_price: unitPrice,
+        quantity: qty,
+        payment_terms: 'Immediate UPI Settlement',
+        lifetime_purchases_count: 15,
+        target_discount_pct: 7.5
+      })
+    });
+    const data = await res.json();
+    activeNegotiationData = data;
+
+    document.getElementById('nego-initial-price').innerText = `₹${data.initial_unit_price.toFixed(2)} / unit`;
+    document.getElementById('nego-initial-total').innerText = `Total: ₹${data.initial_total_cost.toLocaleString('en-IN')}`;
+    document.getElementById('nego-counter-price').innerText = `₹${data.counter_unit_price.toFixed(2)} / unit`;
+    document.getElementById('nego-counter-total').innerText = `Total: ₹${data.counter_total_cost.toLocaleString('en-IN')} (-${data.discount_percentage}%)`;
+    document.getElementById('nego-margin-saved').innerText = `+₹${data.margin_saved.toLocaleString('en-IN')}`;
+
+    const levContainer = document.getElementById('nego-leverage-container');
+    levContainer.innerHTML = '';
+    data.leverage_points.forEach(lp => {
+      const div = document.createElement('div');
+      div.className = 'p-2 rounded-lg bg-surface-950 border border-slate-800 text-slate-300 flex items-center gap-2';
+      div.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0"></span><span>${lp}</span>`;
+      levContainer.appendChild(div);
+    });
+
+    document.getElementById('nego-message-preview').value = data.proposal_message;
+
+    if (window.lucide) lucide.createIcons();
+  } catch (err) {
+    showToast('Negotiation Error', err.message, 'error');
+  }
+}
+
+function closeNegotiationModal() {
+  const modal = document.getElementById('negotiate-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function copyNegotiationProposal() {
+  const textarea = document.getElementById('nego-message-preview');
+  if (textarea) {
+    navigator.clipboard.writeText(textarea.value);
+    showToast('Proposal Copied! 📋', 'Vendor bargaining proposal ready to paste in WhatsApp.', 'info');
+  }
+}
+
+function simulateVendorAcceptance() {
+  if (!activeNegotiationData) return;
+  showToast('Vendor Accepted Counter-Offer! 🎉', `Supplier confirmed ₹${activeNegotiationData.counter_unit_price}/unit. Saved ₹${activeNegotiationData.margin_saved} in purchase margin!`, 'success');
+  closeNegotiationModal();
+  fetchAllData();
+}
+
+// -------------------------------------------------------------
+// 3. PHYSICAL BILL & HANDWRITTEN CHITTI OCR DIGITIZER
+// -------------------------------------------------------------
+const OCR_PRESETS = {
+  charni_road: `Charni Road Wholesale Electronics Hub
+Challan Date: 22-Aug-2026
+Items:
+20 pcs Boat BassHeads Earphones @ 410.00
+10 pcs 65W GaN Fast Charger @ 810.00
+30 pcs Type-C Braided Cable @ 170.00
+Tax: CGST 9% SGST 9%`,
+  sp_road: `SP Road Electronic Market Bengaluru
+Date: 23-Aug-2026 | Challan #BLR-9901
+Items:
+15 pcs OnePlus Nord Buds 2 @ 1850.00
+10 pcs Fastrack Smartwatch @ 1520.00
+40 pcs Type-C Braided Cable @ 165.00
+Payment: UPI / Immediate`,
+  nehru_place: `Nehru Place Hardware & Storage Hub
+Challan #NP-4421 | Delhi
+Items:
+25 pcs SanDisk 128GB MicroSD Card @ 610.00
+5 pcs Redmi Note 13 5G Smartphone @ 13900.00
+15 pcs Mi 20000mAh Power Bank @ 1420.00
+GST Verified Input Tax Credit Claimable`
+};
+
+let activeParsedOcrBill = null;
+
+function openOcrModal() {
+  const modal = document.getElementById('ocr-bill-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  loadOcrPreset('charni_road');
+  if (window.lucide) lucide.createIcons();
+}
+
+function closeOcrModal() {
+  const modal = document.getElementById('ocr-bill-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function loadOcrPreset(key) {
+  const textarea = document.getElementById('ocr-raw-text');
+  if (textarea && OCR_PRESETS[key]) {
+    textarea.value = OCR_PRESETS[key];
+  }
+}
+
+async function runOcrDigitization() {
+  const rawText = document.getElementById('ocr-raw-text').value;
+  if (!rawText.trim()) return;
+
+  try {
+    const res = await fetch('/api/ocr/digitize-bill', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bill_text: rawText })
+    });
+    const data = await res.json();
+    activeParsedOcrBill = data;
+
+    document.getElementById('ocr-result-container').classList.remove('hidden');
+    document.getElementById('ocr-commit-btn').classList.remove('hidden');
+    document.getElementById('ocr-supplier-display').innerText = `${data.supplier_name} (${data.bill_number})`;
+    document.getElementById('ocr-itc-display').innerText = `ITC Claimable: ₹${data.input_tax_credit_claimable.toLocaleString('en-IN')}`;
+
+    const tbody = document.getElementById('ocr-items-table-body');
+    tbody.innerHTML = '';
+    data.items.forEach(item => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="p-2.5 font-bold text-white">${item.product_name}</td>
+        <td class="p-2.5 font-mono text-slate-200">${item.quantity} units</td>
+        <td class="p-2.5 font-mono text-slate-300">₹${item.unit_cost_price.toFixed(2)}</td>
+        <td class="p-2.5 font-mono font-bold text-emerald-400">₹${item.line_total.toLocaleString('en-IN')}</td>
+        <td class="p-2.5 font-mono text-teal-400 font-semibold">${item.confidence_score}%</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    if (window.lucide) lucide.createIcons();
+  } catch (err) {
+    showToast('OCR Error', err.message, 'error');
+  }
+}
+
+async function commitOcrBillToInventory() {
+  if (!activeParsedOcrBill) return;
+
+  try {
+    const res = await fetch('/api/ocr/commit-bill', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(activeParsedOcrBill)
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Inventory Updated from Bill! 📦', `${data.message} Recorded ₹${data.itc_claimed} ITC.`, 'success');
+      closeOcrModal();
+      await fetchAllData();
+    }
+  } catch (err) {
+    showToast('Commit Error', err.message, 'error');
+  }
+}
+
+// -------------------------------------------------------------
+// 4. 'WHILE YOU SLEPT' 24-HOUR AUTONOMOUS SHIFT SIMULATOR
+// -------------------------------------------------------------
+async function openNightShiftModal() {
+  const modal = document.getElementById('night-shift-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  await runNightShiftSimulation();
+}
+
+function closeNightShiftModal() {
+  const modal = document.getElementById('night-shift-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function runNightShiftSimulation() {
+  const timelineContainer = document.getElementById('night-shift-timeline');
+  if (!timelineContainer) return;
+
+  timelineContainer.innerHTML = `<div class="text-slate-400 text-xs py-4 flex items-center gap-2"><i data-lucide="loader" class="w-4 h-4 animate-spin text-purple-400"></i> Accelerating 24-hour operations shift in 5.0 seconds...</div>`;
+  if (window.lucide) lucide.createIcons();
+
+  try {
+    const res = await fetch('/api/simulator/night-shift', { method: 'POST' });
+    const data = await res.json();
+
+    timelineContainer.innerHTML = '';
+    
+    // Animate items one by one with 300ms delay for live time machine feeling
+    for (let i = 0; i < data.timeline.length; i++) {
+      const item = data.timeline[i];
+      const div = document.createElement('div');
+      div.className = 'relative group';
+      div.innerHTML = `
+        <div class="absolute -left-[21px] top-1.5 w-2.5 h-2.5 rounded-full bg-purple-400 ring-4 ring-surface-900"></div>
+        <div class="p-3 rounded-xl bg-surface-950 border border-slate-800 hover:border-purple-500/50 transition space-y-1">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-purple-400 text-[11px] font-bold">${item.time}</span>
+              <span class="text-white font-bold text-xs">${item.title}</span>
+            </div>
+            <span class="font-mono text-emerald-400 font-bold text-[11px]">${item.financial_impact}</span>
+          </div>
+          <p class="text-slate-300 text-[11px] leading-relaxed">${item.detail}</p>
+          <div class="flex items-center gap-2 pt-1 text-[10px] text-slate-500 font-mono">
+            <span class="px-1.5 py-0.2 rounded bg-surface-900 border border-slate-800 text-slate-400">${item.agent_name}</span>
+            <span>•</span>
+            <span>Phase: ${item.phase}</span>
+          </div>
+        </div>
+      `;
+      timelineContainer.appendChild(div);
+      await new Promise(r => setTimeout(r, 200));
+    }
+
+    if (window.lucide) lucide.createIcons();
+    showToast('Autonomous 24h Shift Complete! 🌙', 'All 8 autonomous operations executed with zero human friction.', 'success');
+  } catch (err) {
+    showToast('Simulation Error', err.message, 'error');
+  }
+}
+
 
 

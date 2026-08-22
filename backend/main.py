@@ -60,6 +60,26 @@ class KhataReminderRequest(BaseModel):
     language: Optional[str] = "en"
     channel: Optional[str] = "telegram"
 
+class NegotiationRequest(BaseModel):
+    product_name: str
+    supplier_name: str
+    initial_unit_price: float
+    quantity: int
+    payment_terms: Optional[str] = "Net 15"
+    lifetime_purchases_count: Optional[int] = 15
+    target_discount_pct: Optional[float] = 7.5
+
+class BillOcrRequest(BaseModel):
+    bill_text: str
+    supplier_hint: Optional[str] = None
+
+class BranchTransferRequest(BaseModel):
+    transfer_id: str
+    product_id: str
+    quantity: int
+    source_branch: str
+    target_branch: str
+
 @app.on_event("startup")
 def startup_event():
     telegram_service.start_background_poller(interval_seconds=1.0)
@@ -511,6 +531,72 @@ def send_khata_reminder(req: KhataReminderRequest):
         conn.close()
 
     return res
+
+# -------------------------------------------------------------
+# 1. Autonomous B2B Vendor Price Negotiation Protocol
+# -------------------------------------------------------------
+
+@app.post("/api/procurement/negotiate")
+def negotiate_vendor_price(req: NegotiationRequest):
+    """Generates AI-driven counter-offer and margin savings strategy against vendor price quotes."""
+    from backend.agents.negotiation_agent import vendor_negotiation_engine
+    return vendor_negotiation_engine.generate_counter_offer(
+        product_name=req.product_name,
+        supplier_name=req.supplier_name,
+        initial_unit_price=req.initial_unit_price,
+        quantity=req.quantity,
+        payment_terms=req.payment_terms or "Net 15",
+        lifetime_purchases_count=req.lifetime_purchases_count or 15,
+        target_discount_pct=req.target_discount_pct or 7.5
+    )
+
+# -------------------------------------------------------------
+# 2. Physical Bill & Handwritten Chitti OCR Digitizer
+# -------------------------------------------------------------
+
+@app.post("/api/ocr/digitize-bill")
+def digitize_physical_bill(req: BillOcrRequest):
+    """Parses handwritten or printed paper challan/bill into structured inventory line items."""
+    from backend.ocr_service import bill_ocr_service
+    return bill_ocr_service.parse_bill_text(req.bill_text, req.supplier_hint)
+
+@app.post("/api/ocr/commit-bill")
+def commit_digitized_bill(bill_data: Dict[str, Any]):
+    """Adds verified items from digitized bill directly to inventory database."""
+    from backend.ocr_service import bill_ocr_service
+    return bill_ocr_service.commit_bill_to_inventory(bill_data)
+
+# -------------------------------------------------------------
+# 3. Multi-Branch Inventory Rebalancing & Inter-Store Teleportation
+# -------------------------------------------------------------
+
+@app.get("/api/inventory/multi-branch")
+def get_multi_branch_inventory():
+    """Returns 3-branch inventory allocation and arbitrage rebalancing opportunities."""
+    from backend.branch_service import multi_branch_service
+    return multi_branch_service.get_multi_branch_overview()
+
+@app.post("/api/inventory/rebalance-transfer")
+def execute_branch_stock_transfer(req: BranchTransferRequest):
+    """Executes inter-branch stock teleportation, updating inventory and issuing internal Gate Pass."""
+    from backend.branch_service import multi_branch_service
+    return multi_branch_service.execute_internal_transfer(
+        transfer_id=req.transfer_id,
+        product_id=req.product_id,
+        quantity=req.quantity,
+        source_branch=req.source_branch,
+        target_branch=req.target_branch
+    )
+
+# -------------------------------------------------------------
+# 4. 'While You Slept' 24-Hour Autonomous Shift Simulator
+# -------------------------------------------------------------
+
+@app.post("/api/simulator/night-shift")
+def run_night_shift_simulation():
+    """Runs a 24-hour cycle of autonomous multi-agent proactive operations in accelerated time."""
+    from backend.night_shift_simulator import night_shift_simulator
+    return night_shift_simulator.run_24h_autonomous_shift()
 
 @app.post("/api/ai/voice-query")
 def ai_voice_query(req: VoiceQueryRequest):

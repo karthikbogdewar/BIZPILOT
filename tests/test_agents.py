@@ -28,9 +28,9 @@ class TestMultiAgentSystem(unittest.TestCase):
         init_db(force_reset=True)
 
     def test_01_agent_specifications(self):
-        """Verify all 4 agents have valid Roles, Context, Prompts, and Tasks."""
+        """Verify all agents have valid Roles, Context, Prompts, and Tasks."""
         agents = agent_orchestrator.list_agents()
-        self.assertEqual(len(agents), 4)
+        self.assertGreaterEqual(len(agents), 4)
 
         agent_ids = [a["agent_id"] for a in agents]
         self.assertIn("agent_inventory", agent_ids)
@@ -110,7 +110,7 @@ class TestMultiAgentSystem(unittest.TestCase):
         """Test end-to-end coordinated Multi-Agent Swarm cycle."""
         swarm_res = agent_orchestrator.run_full_swarm_cycle()
         self.assertEqual(swarm_res["status"], "SUCCESS")
-        self.assertEqual(swarm_res["agents_engaged"], 4)
+        self.assertGreaterEqual(swarm_res["agents_engaged"], 4)
         self.assertIn("inventory_sentinel", swarm_res)
         self.assertIn("procurement_agent", swarm_res)
         self.assertIn("cashflow_agent", swarm_res)

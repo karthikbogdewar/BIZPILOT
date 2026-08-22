@@ -1180,9 +1180,12 @@ async function renderAgentsSquadPage() {
 
   const agentIcons = {
     'agent_inventory': { icon: 'boxes', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/30', badge: 'Inventory & Forecasting' },
-    'agent_sales': { icon: 'message-square', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', badge: 'WhatsApp & Sales' },
+    'agent_sales': { icon: 'message-square', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', badge: 'WhatsApp & Conversational Sales' },
     'agent_cashflow': { icon: 'receipt', color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/30', badge: 'Receivables & Cash Flow' },
-    'agent_procurement': { icon: 'truck', color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/30', badge: 'Procurement & Vendor SLA' }
+    'agent_procurement': { icon: 'truck', color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/30', badge: 'Procurement & Vendor SLA' },
+    'agent_multilingual': { icon: 'languages', color: 'text-sky-400', bg: 'bg-sky-500/10', border: 'border-sky-500/30', badge: 'Indic Localization & Transliteration' },
+    'agent_gst_tax': { icon: 'calculator', color: 'text-teal-400', bg: 'bg-teal-500/10', border: 'border-teal-500/30', badge: 'GST, HSN & Tax Compliance' },
+    'agent_executive_brief': { icon: 'briefcase', color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/30', badge: 'CEO Operations Briefing' }
   };
 
   container.innerHTML = state.agents.map(agent => {
@@ -1383,5 +1386,163 @@ async function sendTelegramTestApproval() {
   } catch (err) {
     showToast('Telegram Alert Error', err.message, 'error');
   }
+}
+
+async function dispatchTelegramDailyBriefing() {
+  try {
+    showToast('Synthesizing Briefing', 'Executive Briefing Agent is compiling daily telemetry...', 'info');
+    const res = await fetch('/api/agents/task', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        agent_id: "agent_executive_brief",
+        task_name: "dispatch_telegram_briefing",
+        payload: {}
+      })
+    });
+    const data = await res.json();
+    if (data.success && data.result.dispatched_to_telegram) {
+      showToast('CEO Briefing Sent!', 'Daily operations summary pushed to your Telegram Bot!', 'success');
+    } else {
+      showToast('Briefing Generated', 'Summary ready. Link Telegram to receive phone push.', 'warning');
+    }
+  } catch (err) {
+    showToast('Briefing Error', err.message, 'error');
+  }
+}
+
+// -------------------------------------------------------------
+// MULTILINGUAL DASHBOARD TRANSLATION DICTIONARY
+// -------------------------------------------------------------
+
+const UI_TRANSLATIONS = {
+  en: {
+    dashboard: "Dashboard",
+    agents_squad: "AI Agents Squad",
+    ai_agent: "AI Command Center",
+    orders: "Orders & WhatsApp",
+    inventory: "Inventory & Stockout",
+    invoices: "Invoices & Payments",
+    suppliers: "Suppliers & Matrix",
+    approvals: "Owner Approvals",
+    title_dashboard: "Operational Command Dashboard",
+    total_orders: "Total Orders",
+    pending_orders: "Pending Orders",
+    stockout_risk: "Stockout Risk",
+    cash_collected: "Cash Collected",
+    overdue_amount: "Overdue Amount",
+    runway_days: "Cash Runway"
+  },
+  hi: {
+    dashboard: "डैशबोर्ड",
+    agents_squad: "एआई एजेंट दस्ता",
+    ai_agent: "एआई कमांड सेंटर",
+    orders: "ऑर्डर और व्हाट्सएप",
+    inventory: "इन्वेंट्री और स्टॉक",
+    invoices: "चालान और भुगतान",
+    suppliers: "सप्लायर्स मैट्रिक्स",
+    approvals: "मालिक अनुमोदन",
+    title_dashboard: "बिजनेस ऑपरेशंस डैशबोर्ड",
+    total_orders: "कुल ऑर्डर",
+    pending_orders: "लंबित ऑर्डर",
+    stockout_risk: "स्टॉक खत्म होने का जोखिम",
+    cash_collected: "प्राप्त नकद",
+    overdue_amount: "बकाया राशि",
+    runway_days: "कैश रनवे"
+  },
+  te: {
+    dashboard: "డ్యాష్‌బోర్డ్",
+    agents_squad: "ఏఐ ఏజెంట్ల స్క్వాడ్",
+    ai_agent: "ఏఐ కమాండ్ సెంటర్",
+    orders: "ఆర్డర్లు & వాట్సాప్",
+    inventory: "ఇన్వెంటరీ & స్టాక్",
+    invoices: "ఇన్‌వాయిస్‌లు & చెల్లింపులు",
+    suppliers: "సరఫరాదారులు",
+    approvals: "యజమాని ఆమోదాలు",
+    title_dashboard: "వ్యాపార కార్యకలాపాల డ్యాష్‌బోర్డ్",
+    total_orders: "మొత్తం ఆర్డర్లు",
+    pending_orders: "పెండింగ్ ఆర్డర్లు",
+    stockout_risk: "స్టాక్ కొరత ప్రమాదం",
+    cash_collected: "వసూలైన నగదు",
+    overdue_amount: "బకాయి మొత్తం",
+    runway_days: "నగదు రన్‌వే"
+  },
+  kn: {
+    dashboard: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+    agents_squad: "ಎಐ ಏಜೆಂಟ್ ಸ್ಕ್ವಾಡ್",
+    ai_agent: "ಎಐ ಕಮಾಂಡ್ ಸೆಂಟರ್",
+    orders: "ಆರ್ಡರ್‌ಗಳು & ವಾಟ್ಸಾಪ್",
+    inventory: "ದಾಸ್ತಾನು & ಸ್ಟಾಕ್",
+    invoices: "ಇನ್‌ವಾಯ್ಸ್‌ಗಳು & ಪಾವತಿಗಳು",
+    suppliers: "ಪೂರೈಕೆದಾರರು",
+    approvals: "ಮಾಲೀಕರ ಅನುಮೋದನೆಗಳು",
+    title_dashboard: "ವ್ಯಾಪಾರ ಕಾರ್ಯಾಚರಣೆಗಳ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+    total_orders: "ಒಟ್ಟು ಆರ್ಡರ್‌ಗಳು",
+    pending_orders: "ಬಾಕಿ ಉಳಿದ ಆರ್ಡರ್‌ಗಳು",
+    stockout_risk: "ಸ್ಟಾಕ್ ಕೊರತೆ ಎಚ್ಚರಿಕೆ",
+    cash_collected: "ಸ್ವೀಕರಿಸಿದ ನಗದು",
+    overdue_amount: "ಬಾಕಿ ಮೊತ್ತ",
+    runway_days: "ಕ್ಯಾಶ್ ರನ್‌ವೇ"
+  },
+  ta: {
+    dashboard: "டாஷ்போர்டு",
+    agents_squad: "AI ஏஜென்ட் படை",
+    ai_agent: "AI கட்டளை மையம்",
+    orders: "ஆர்டர்கள் & வாட்ஸ்அப்",
+    inventory: "சரக்கு & ஸ்டாக்",
+    invoices: "விலைப்பட்டியல் & பணம்",
+    suppliers: "விற்பனையாளர்கள்",
+    approvals: "உரிமையாளர் ஒப்புதல்கள்",
+    title_dashboard: "வணிக செயல்பாடுகள் டாஷ்போர்டு",
+    total_orders: "மொத்த ஆர்டர்கள்",
+    pending_orders: "நிலுவையில் உள்ள ஆர்டர்கள்",
+    stockout_risk: "சரக்கு தீரும் அபாயம்",
+    cash_collected: "வசூலிக்கப்பட்ட பணம்",
+    overdue_amount: "நிலுவைத் தொகை",
+    runway_days: "பண இருப்பு நாட்கள்"
+  }
+};
+
+let currentDashboardLanguage = 'en';
+
+function setDashboardLanguage(lang) {
+  currentDashboardLanguage = lang || 'en';
+  
+  // Highlight active button
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.remove('bg-slate-800', 'text-white');
+    btn.classList.add('text-slate-400');
+  });
+  const activeBtn = document.getElementById(`lang-btn-${currentDashboardLanguage}`);
+  if (activeBtn) {
+    activeBtn.classList.remove('text-slate-400');
+    activeBtn.classList.add('bg-slate-800', 'text-white');
+  }
+
+  const dict = UI_TRANSLATIONS[currentDashboardLanguage] || UI_TRANSLATIONS.en;
+  
+  // Update sidebar nav labels
+  const navItems = {
+    'dashboard': dict.dashboard,
+    'agents-squad': dict.agents_squad,
+    'ai-agent': dict.ai_agent,
+    'orders': dict.orders,
+    'inventory': dict.inventory,
+    'invoices': dict.invoices,
+    'suppliers': dict.suppliers,
+    'approvals': dict.approvals
+  };
+
+  for (const [key, label] of Object.entries(navItems)) {
+    const btn = document.querySelector(`.nav-btn[data-tab="${key}"] span:not([class*="bg-"])`);
+    if (btn) btn.innerText = label;
+  }
+
+  const pageTitle = document.getElementById('page-title');
+  if (pageTitle && state.activeTab === 'dashboard') {
+    pageTitle.innerText = dict.title_dashboard;
+  }
+
+  showToast('Language Updated', `Switched UI language to ${currentDashboardLanguage.toUpperCase()}`, 'info');
 }
 

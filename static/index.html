@@ -96,7 +96,7 @@
               <i data-lucide="bot" class="w-4 h-4 text-slate-400 group-[.active]:text-brand-400"></i>
               <span>AI Agents Squad</span>
             </div>
-            <span class="text-[10px] px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 font-mono font-bold border border-brand-500/30">4 Active</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 font-mono font-bold border border-brand-500/30">7 Active</span>
           </button>
           <button onclick="switchTab('ai-agent')" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition group" data-tab="ai-agent">
             <div class="flex items-center gap-3">
@@ -182,11 +182,25 @@
           </div>
         </div>
 
-        <!-- Quick Action Buttons -->
+        <!-- Quick Action Buttons & Language Switcher -->
         <div class="flex items-center gap-2.5">
+          <!-- Multilingual Indic Switcher -->
+          <div class="flex items-center bg-surface-950 border border-slate-800 rounded-lg p-0.5 text-xs font-semibold" title="Switch Dashboard & Agent Language">
+            <button onclick="setDashboardLanguage('en')" id="lang-btn-en" class="lang-btn px-2 py-1 rounded-md text-white bg-slate-800 transition cursor-pointer">EN</button>
+            <button onclick="setDashboardLanguage('hi')" id="lang-btn-hi" class="lang-btn px-2 py-1 rounded-md text-slate-400 hover:text-white transition cursor-pointer">हिं</button>
+            <button onclick="setDashboardLanguage('te')" id="lang-btn-te" class="lang-btn px-2 py-1 rounded-md text-slate-400 hover:text-white transition cursor-pointer">తె</button>
+            <button onclick="setDashboardLanguage('kn')" id="lang-btn-kn" class="lang-btn px-2 py-1 rounded-md text-slate-400 hover:text-white transition cursor-pointer">ಕ</button>
+            <button onclick="setDashboardLanguage('ta')" id="lang-btn-ta" class="lang-btn px-2 py-1 rounded-md text-slate-400 hover:text-white transition cursor-pointer">த</button>
+          </div>
+
+          <button onclick="dispatchTelegramDailyBriefing()" class="bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 border border-sky-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer" title="Send Daily Briefing to your Telegram">
+            <i data-lucide="send" class="w-3.5 h-3.5 text-sky-400"></i>
+            <span>CEO Brief to Telegram</span>
+          </button>
+
           <button onclick="openWhatsAppSimulatorModal()" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
             <i data-lucide="message-square" class="w-3.5 h-3.5 text-emerald-400"></i>
-            <span>Simulate WhatsApp Order</span>
+            <span>Simulate Multilingual Chat</span>
           </button>
           
           <button onclick="switchTab('approvals')" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer relative">
@@ -1046,11 +1060,11 @@
               <div class="flex items-center gap-2">
                 <h3 class="text-xl font-bold text-white">BizPilot Multi-Agent Operations Swarm</h3>
                 <span class="bg-emerald-500/20 text-emerald-300 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold border border-emerald-500/30 flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 4 Agents Active
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 7 Agents Active
                 </span>
               </div>
               <p class="text-xs text-slate-400 mt-1 max-w-2xl">
-                Specialized autonomous sub-agents executing synchronized tasks across inventory velocity, conversational sales, payment collections, and procurement negotiations.
+                Specialized autonomous sub-agents executing synchronized tasks across inventory velocity, conversational sales, payment collections, supplier negotiations, multilingual Indic translation, GST tax compliance, and daily executive briefing.
               </p>
             </div>
           </div>
@@ -1112,14 +1126,20 @@
       <div class="p-3 bg-surface-950 border-b border-slate-800 text-xs">
         <span class="text-slate-400 block mb-1.5 text-[11px]">Click preset test message:</span>
         <div class="flex flex-wrap gap-1.5">
-          <button onclick="setWhatsAppPreset('I need 10 Boat earphones and 5 chargers', 'Arjun Mehta')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded text-[11px] border border-slate-700 transition">
-            1. Shortage: 10 Boat + 5 Chargers
+          <button onclick="setWhatsAppPreset('Bhaiya do boat earphones aur teen charger bhej do dukaan pe', 'Rajesh Sharma')" class="bg-slate-800 hover:bg-slate-700 text-amber-300 px-2 py-1 rounded text-[11px] border border-slate-700 transition">
+            🇮🇳 Hinglish: 2 Boat + 3 Chargers
+          </button>
+          <button onclick="setWhatsAppPreset('Naku 2 boat earphones mariyu 3 chargers pampandi', 'Srinivas Rao')" class="bg-slate-800 hover:bg-slate-700 text-sky-300 px-2 py-1 rounded text-[11px] border border-slate-700 transition">
+            🇮🇳 Telugu: 2 Earphones + 3 Chargers
+          </button>
+          <button onclick="setWhatsAppPreset('Namage 2 boat earphones mathu 3 type c cables beku', 'Anand Kumar')" class="bg-slate-800 hover:bg-slate-700 text-emerald-300 px-2 py-1 rounded text-[11px] border border-slate-700 transition">
+            🇮🇳 Kannada: 2 Earphones + 3 Cables
+          </button>
+          <button onclick="setWhatsAppPreset('Enaku 2 boat earphones and 3 chargers anupunga', 'Karthik Raja')" class="bg-slate-800 hover:bg-slate-700 text-purple-300 px-2 py-1 rounded text-[11px] border border-slate-700 transition">
+            🇮🇳 Tamil: 2 Earphones + 3 Chargers
           </button>
           <button onclick="setWhatsAppPreset('Please send 2 65W fast chargers and 4 type c cables urgently', 'Rohan Verma')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded text-[11px] border border-slate-700 transition">
-            2. Available: 2 Chargers + 4 Cables
-          </button>
-          <button onclick="setWhatsAppPreset('Need 1 Fastrack smartwatch and 2 Sandisk 128gb memory cards', 'Deepa Nair')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded text-[11px] border border-slate-700 transition">
-            3. Available: Smartwatch + SD Cards
+            🇬🇧 English: 2 Chargers + 4 Cables
           </button>
         </div>
       </div>

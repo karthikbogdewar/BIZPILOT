@@ -145,6 +145,35 @@ class SalesAgent(BaseBizPilotAgent):
                         "available_stock": p['stock']
                     })
 
+            # Multilingual Localization Engine
+            from backend.agents.multilingual_agent import MultilingualAgent, INDIC_NUMBERS
+            ml_agent = MultilingualAgent()
+            detected_lang = ml_agent.detect_language(raw_msg)
+
+            # Check Indic number words in message if regular digits not found
+            for num_word, val in INDIC_NUMBERS.items():
+                if f" {num_word} " in f" {lower_msg} ":
+                    for p in products:
+                        p_name_lower = p['name'].lower()
+                        keywords = [k for k in p_name_lower.split() if len(k) > 3]
+                        if any(k in lower_msg for k in keywords):
+                            # Replace or append if not already parsed
+                            if not any(it['product_id'] == p['id'] for it in parsed_items):
+                                parsed_items.append({
+                                    "product_id": p['id'],
+                                    "name": p['name'],
+                                    "qty": val,
+                                    "unit_price": p['unit_price'],
+                                    "total_price": round(val * p['unit_price'], 2),
+                                    "available_stock": p['stock']
+                                })
+
+            # Deduplicate parsed items
+            unique_items = {}
+            for it in parsed_items:
+                unique_items[it['product_id']] = it
+            parsed_items = list(unique_items.values())
+
             # Fallback if no specific quantity extracted
             if not parsed_items and len(products) > 0:
                 for p in products:
@@ -214,15 +243,13 @@ class SalesAgent(BaseBizPilotAgent):
             conn.commit()
             conn.close()
 
-            # Draft conversational WhatsApp reply
-            items_str = ", ".join([f"{i['qty']}x {i['name']} (₹{i['unit_price']:.0f})" for i in parsed_items])
-            reply = (
-                f"Hello {customer_name}! 😊 We have received your order:\n"
-                f"📦 {items_str}\n"
-                f"💰 Total: ₹{total_amount:,.2f}\n"
-                f"🧾 Invoice: {inv_id}\n\n"
-                f"Your items have been reserved. Click here to pay securely via UPI: upi://pay?pa=bizpilot@icici&am={total_amount:.0f}\n"
-                f"Thank you for choosing us!"
+            # Draft localized conversational reply using Multilingual Agent
+            reply = ml_agent.format_localized_reply(
+                lang=detected_lang,
+                customer_name=customer_name,
+                items=parsed_items,
+                total=total_amount,
+                invoice_id=inv_id
             )
 
             return {
@@ -231,6 +258,7 @@ class SalesAgent(BaseBizPilotAgent):
                 "task": task_name,
                 "timestamp": now.strftime('%Y-%m-%d %H:%M:%S'),
                 "status": "COMPLETED",
+                "detected_language": detected_lang,
                 "order_id": order_id,
                 "invoice_id": inv_id,
                 "customer_name": customer_name,
@@ -238,7 +266,7 @@ class SalesAgent(BaseBizPilotAgent):
                 "total_amount": total_amount,
                 "items_parsed": parsed_items,
                 "drafted_reply": reply,
-                "action_taken": f"Reserved {len(parsed_items)} items, created Order {order_id} and generated Invoice {inv_id}."
+                "action_taken": f"Reserved {len(parsed_items)} items, created Order {order_id} and generated Invoice {inv_id} in language '{detected_lang}'."
             }
 
         elif task_name == "generate_quote":

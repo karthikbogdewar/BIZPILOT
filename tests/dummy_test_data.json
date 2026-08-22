@@ -440,7 +440,7 @@
       "order_status": "Completed",
       "channel": "WhatsApp",
       "raw_message": "Hey Karthik, need 8 GaN fast chargers and 5 Type-C cables urgently.",
-      "created_at": "2026-08-16 00:06",
+      "created_at": "2026-08-16 00:33",
       "items_json": "[{\"product_id\": \"PRD-102\", \"name\": \"65W Fast GaN Charger\", \"qty\": 8, \"price\": 1299.0}, {\"product_id\": \"PRD-103\", \"name\": \"100W Braided Type-C Cable\", \"qty\": 5, \"price\": 399.0}]"
     },
     {
@@ -452,7 +452,7 @@
       "order_status": "Processing",
       "channel": "WhatsApp",
       "raw_message": "Need 2 Boat earphones and 4 SanDisk 128GB cards for our event staff.",
-      "created_at": "2026-08-22 00:06",
+      "created_at": "2026-08-22 00:33",
       "items_json": "[{\"product_id\": \"PRD-101\", \"name\": \"Boat BassHeads Earphones\", \"qty\": 2, \"price\": 699.0}, {\"product_id\": \"PRD-106\", \"name\": \"SanDisk 128GB MicroSD\", \"qty\": 4, \"price\": 849.0}]"
     },
     {
@@ -464,7 +464,7 @@
       "order_status": "Completed",
       "channel": "Online Store",
       "raw_message": "Online store direct checkout",
-      "created_at": "2026-08-21 00:06",
+      "created_at": "2026-08-21 00:33",
       "items_json": "[{\"product_id\": \"PRD-104\", \"name\": \"OnePlus Nord Buds 2 TWS\", \"qty\": 6, \"price\": 2499.0}, {\"product_id\": \"PRD-105\", \"name\": \"Fastrack Limitless Smartwatch\", \"qty\": 2, \"price\": 1999.0}]"
     },
     {
@@ -476,7 +476,7 @@
       "order_status": "Completed",
       "channel": "Phone Call",
       "raw_message": "Phone order for replacement accessories",
-      "created_at": "2026-08-11 00:06",
+      "created_at": "2026-08-11 00:33",
       "items_json": "[{\"product_id\": \"PRD-102\", \"name\": \"65W Fast GaN Charger\", \"qty\": 5, \"price\": 1299.0}, {\"product_id\": \"PRD-103\", \"name\": \"100W Braided Type-C Cable\", \"qty\": 4, \"price\": 399.0}]"
     },
     {
@@ -488,7 +488,7 @@
       "order_status": "Completed",
       "channel": "Walk-in",
       "raw_message": "Walk-in customer sale",
-      "created_at": "2026-08-22 21:06",
+      "created_at": "2026-08-22 21:33",
       "items_json": "[{\"product_id\": \"PRD-101\", \"name\": \"Boat BassHeads Earphones\", \"qty\": 1, \"price\": 699.0}, {\"product_id\": \"PRD-104\", \"name\": \"OnePlus Nord Buds 2 TWS\", \"qty\": 1, \"price\": 2499.0}]"
     },
     {
@@ -500,7 +500,7 @@
       "order_status": "Completed",
       "channel": "WhatsApp",
       "raw_message": "Please send 5 power banks for our conference tomorrow.",
-      "created_at": "2026-08-20 00:06",
+      "created_at": "2026-08-20 00:33",
       "items_json": "[{\"product_id\": \"PRD-107\", \"name\": \"Portronics 20000mAh Power Bank\", \"qty\": 5, \"price\": 1699.0}, {\"product_id\": \"PRD-103\", \"name\": \"100W Braided Type-C Cable\", \"qty\": 2, \"price\": 399.0}]"
     },
     {
@@ -512,7 +512,7 @@
       "order_status": "Processing",
       "channel": "Online Store",
       "raw_message": "Web store order for office peripherals",
-      "created_at": "2026-08-22 16:06",
+      "created_at": "2026-08-22 16:33",
       "items_json": "[{\"product_id\": \"PRD-109\", \"name\": \"JBL Go 3 Portable Speaker\", \"qty\": 3, \"price\": 2999.0}, {\"product_id\": \"PRD-105\", \"name\": \"Fastrack Limitless Smartwatch\", \"qty\": 3, \"price\": 1999.0}, {\"product_id\": \"PRD-108\", \"name\": \"Tempered Glass Screen Guard\", \"qty\": 5, \"price\": 199.0}]"
     },
     {
@@ -524,7 +524,7 @@
       "order_status": "Completed",
       "channel": "WhatsApp",
       "raw_message": "Need 10 screen protectors and 2 fast chargers for dispatch drivers.",
-      "created_at": "2026-08-08 00:06",
+      "created_at": "2026-08-08 00:33",
       "items_json": "[{\"product_id\": \"PRD-108\", \"name\": \"Tempered Glass Screen Guard\", \"qty\": 10, \"price\": 199.0}, {\"product_id\": \"PRD-102\", \"name\": \"65W Fast GaN Charger\", \"qty\": 2, \"price\": 1299.0}, {\"product_id\": \"PRD-110\", \"name\": \"Spigen Rugged Armor Phone Case\", \"qty\": 1, \"price\": 899.0}]"
     }
   ],
@@ -638,7 +638,7 @@
       "total_cost": 8500.0,
       "estimated_delivery_days": 2,
       "status": "Pending Approval",
-      "created_at": "2026-08-22 23:21",
+      "created_at": "2026-08-22 23:48",
       "approved_at": null
     },
     {
@@ -652,7 +652,7 @@
       "total_cost": 18200.0,
       "estimated_delivery_days": 2,
       "status": "Pending Approval",
-      "created_at": "2026-08-22 23:46",
+      "created_at": "2026-08-23 00:13",
       "approved_at": null
     },
     {
@@ -666,8 +666,8 @@
       "total_cost": 15600.0,
       "estimated_delivery_days": 2,
       "status": "Delivered",
-      "created_at": "2026-08-19 00:06",
-      "approved_at": "2026-08-19 00:06"
+      "created_at": "2026-08-19 00:33",
+      "approved_at": "2026-08-19 00:33"
     },
     {
       "id": "PO-900",
@@ -680,8 +680,8 @@
       "total_cost": 4500.0,
       "estimated_delivery_days": 2,
       "status": "Approved",
-      "created_at": "2026-08-22 00:06",
-      "approved_at": "2026-08-22 00:06"
+      "created_at": "2026-08-22 00:33",
+      "approved_at": "2026-08-22 00:33"
     }
   ],
   "approvals": [
@@ -696,7 +696,7 @@
       "reference_id": "PO-901",
       "status": "Pending",
       "metadata_json": "{\"product_id\": \"PRD-101\", \"product_name\": \"Boat BassHeads Earphones\", \"supplier_id\": \"SUP-001\", \"supplier_name\": \"ABC Electronics Distributors\", \"quantity\": 20, \"unit_price\": 425.0, \"lead_time_days\": 2, \"days_stock_remaining\": 1.33, \"comparison\": [{\"name\": \"ABC Electronics\", \"price\": 425, \"lead\": \"2 days\", \"reliability\": \"96.5%\", \"selected\": true, \"reason\": \"Fastest viable delivery before stockout\"}, {\"name\": \"Apex DigiTech\", \"price\": 410, \"lead\": \"5 days\", \"reliability\": \"85.0%\", \"selected\": false, \"reason\": \"Cheapest, but 5 days delivery guarantees stockout\"}, {\"name\": \"Sonic Distributors\", \"price\": 450, \"lead\": \"1 day\", \"reliability\": \"90.5%\", \"selected\": false, \"reason\": \"Higher unit cost (\\u20b9450)\"}]}",
-      "created_at": "2026-08-22 23:31",
+      "created_at": "2026-08-22 23:58",
       "resolved_at": null
     },
     {
@@ -710,7 +710,7 @@
       "reference_id": "INV-1024",
       "status": "Pending",
       "metadata_json": "{\"invoice_id\": \"INV-1024\", \"customer_name\": \"Rahul Verma (Sharma Tech Solutions)\", \"amount\": 12500.0, \"days_overdue\": 7, \"phone\": \"+91 98765 43210\", \"message\": \"Dear Rahul, Invoice INV-1024 for \\u20b912,500 was due on 16 Aug (7 days overdue). Please click here to settle via UPI: upi://pay?pa=srilakshmi@icici&am=12500\"}",
-      "created_at": "2026-08-22 23:41",
+      "created_at": "2026-08-23 00:08",
       "resolved_at": null
     },
     {
@@ -724,7 +724,7 @@
       "reference_id": "PO-902",
       "status": "Pending",
       "metadata_json": "{\"product_id\": \"PRD-104\", \"product_name\": \"OnePlus Nord Buds 2 TWS\", \"supplier_id\": \"SUP-001\", \"supplier_name\": \"ABC Electronics Distributors\", \"quantity\": 10, \"unit_price\": 1820.0, \"lead_time_days\": 2, \"days_stock_remaining\": 1.6, \"comparison\": [{\"name\": \"ABC Electronics\", \"price\": 1820, \"lead\": \"2 days\", \"reliability\": \"96.5%\", \"selected\": true, \"reason\": \"Fast 2-day delivery prevents stockout\"}, {\"name\": \"Apex DigiTech\", \"price\": 1750, \"lead\": \"4 days\", \"reliability\": \"85.0%\", \"selected\": false, \"reason\": \"4 days lead time will exhaust stock\"}]}",
-      "created_at": "2026-08-22 23:51",
+      "created_at": "2026-08-23 00:18",
       "resolved_at": null
     },
     {
@@ -738,14 +738,14 @@
       "reference_id": "INV-1031",
       "status": "Pending",
       "metadata_json": "{\"invoice_id\": \"INV-1031\", \"customer_name\": \"Deepak Joshi (Speedy Logistics)\", \"amount\": 5690.0, \"days_overdue\": 15, \"phone\": \"+91 91098 76543\"}",
-      "created_at": "2026-08-22 23:56",
+      "created_at": "2026-08-23 00:23",
       "resolved_at": null
     }
   ],
   "activity_logs": [
     {
       "id": 8,
-      "timestamp": "2026-08-22 23:11:07",
+      "timestamp": "2026-08-22 23:38:04",
       "time_display": "10:02 AM",
       "category": "Orders",
       "severity": "info",
@@ -755,7 +755,7 @@
     },
     {
       "id": 9,
-      "timestamp": "2026-08-22 23:13:07",
+      "timestamp": "2026-08-22 23:40:04",
       "time_display": "10:03 AM",
       "category": "Inventory",
       "severity": "success",
@@ -765,7 +765,7 @@
     },
     {
       "id": 10,
-      "timestamp": "2026-08-22 23:16:07",
+      "timestamp": "2026-08-22 23:43:04",
       "time_display": "10:03 AM",
       "category": "Orders",
       "severity": "success",
@@ -775,7 +775,7 @@
     },
     {
       "id": 11,
-      "timestamp": "2026-08-22 23:21:07",
+      "timestamp": "2026-08-22 23:48:04",
       "time_display": "10:04 AM",
       "category": "Inventory",
       "severity": "urgent",
@@ -785,7 +785,7 @@
     },
     {
       "id": 12,
-      "timestamp": "2026-08-22 23:26:07",
+      "timestamp": "2026-08-22 23:53:04",
       "time_display": "10:05 AM",
       "category": "Suppliers",
       "severity": "info",
@@ -795,7 +795,7 @@
     },
     {
       "id": 13,
-      "timestamp": "2026-08-22 23:31:07",
+      "timestamp": "2026-08-22 23:58:04",
       "time_display": "10:05 AM",
       "category": "Approvals",
       "severity": "warning",
@@ -805,7 +805,7 @@
     },
     {
       "id": 14,
-      "timestamp": "2026-08-22 23:41:07",
+      "timestamp": "2026-08-23 00:08:04",
       "time_display": "10:06 AM",
       "category": "Payments",
       "severity": "warning",
@@ -815,7 +815,7 @@
     },
     {
       "id": 15,
-      "timestamp": "2026-08-22 23:48:07",
+      "timestamp": "2026-08-23 00:15:04",
       "time_display": "10:12 AM",
       "category": "Inventory",
       "severity": "urgent",
@@ -825,7 +825,7 @@
     },
     {
       "id": 16,
-      "timestamp": "2026-08-22 23:56:07",
+      "timestamp": "2026-08-23 00:23:04",
       "time_display": "10:20 AM",
       "category": "System",
       "severity": "success",
@@ -837,35 +837,35 @@
   "agent_cognition": [
     {
       "id": 6,
-      "timestamp": "2026-08-22 23:20:07",
+      "timestamp": "2026-08-22 23:47:04",
       "stage": "CAPTURE",
       "summary": "Ingested real-time inventory telemetry and sales velocity.",
       "details": "Scanned 10 active SKUs across warehouse and sales counter."
     },
     {
       "id": 7,
-      "timestamp": "2026-08-22 23:21:07",
+      "timestamp": "2026-08-22 23:48:04",
       "stage": "ANALYZE",
       "summary": "Calculated Days-to-Stockout for all products.",
       "details": "Detected PRD-101 (Boat Earphones) stock=8, avg_sales=6.0/day => 1.33 days remaining. Detected PRD-104 (Nord Buds) stock=4, avg_sales=2.5/day => 1.6 days remaining."
     },
     {
       "id": 8,
-      "timestamp": "2026-08-22 23:24:07",
+      "timestamp": "2026-08-22 23:51:04",
       "stage": "PLAN",
       "summary": "Synthesized optimal replenishment plans.",
       "details": "Target reorders: 20 units PRD-101 and 10 units PRD-104 to maintain 15-day safety buffer without working capital strain."
     },
     {
       "id": 9,
-      "timestamp": "2026-08-22 23:26:07",
+      "timestamp": "2026-08-22 23:53:04",
       "stage": "EVALUATE",
       "summary": "Evaluated multi-vendor trade-offs.",
       "details": "Ranked ABC Electronics #1 for both audio items due to 2-day SLA beating imminent stockouts."
     },
     {
       "id": 10,
-      "timestamp": "2026-08-22 23:31:07",
+      "timestamp": "2026-08-22 23:58:04",
       "stage": "APPROVE",
       "summary": "Awaiting Business Owner Authorization.",
       "details": "Dispatched 4 interactive approval cards to Owner Dashboard (2 POs, 2 Payment Reminders)."

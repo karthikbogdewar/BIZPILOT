@@ -122,6 +122,50 @@ async def telegram_webhook(req: Request):
     result = telegram_service.process_webhook_update(body)
     return result
 
+@app.post("/api/telegram/poll")
+def telegram_poll():
+    """Polls Telegram for pending updates and auto-dispatches orders/callbacks."""
+    processed = telegram_service.poll_updates_once()
+    return {"status": "polled", "processed_count": len(processed), "updates": processed}
+
+@app.post("/api/telegram/auto-discover-chat")
+def telegram_auto_discover_chat():
+    """Finds latest user chat ID from Telegram updates and registers as owner."""
+    updates = telegram_service.get_updates()
+    if not updates:
+        return {"success": False, "message": "No messages found yet. Please open @KBNSN_bot on Telegram and tap /start or send 'hi'."}
+    
+    last_update = updates[-1]
+    msg = last_update.get("message", {})
+    chat = msg.get("chat", {})
+    chat_id = str(chat.get("id", ""))
+    user_name = f"{msg.get('from', {}).get('first_name', '')} {msg.get('from', {}).get('last_name', '')}".strip()
+
+    if chat_id:
+        os.environ["TELEGRAM_OWNER_CHAT_ID"] = chat_id
+        env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+        if os.path.exists(env_path):
+            with open(env_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            if "TELEGRAM_OWNER_CHAT_ID=" in content:
+                content = "\n".join([f"TELEGRAM_OWNER_CHAT_ID={chat_id}" if l.startswith("TELEGRAM_OWNER_CHAT_ID=") else l for l in content.split("\n")])
+            else:
+                content += f"\nTELEGRAM_OWNER_CHAT_ID={chat_id}\n"
+            with open(env_path, "w", encoding="utf-8") as f:
+                f.write(content)
+
+        telegram_service.reload_config()
+
+        # Send greeting confirmation
+        telegram_service.send_message(
+            chat_id=chat_id,
+            text=f"🎉 <b>BizPilot AI Connected!</b>\n\nHello {user_name}, your phone is now linked as the <b>Business Owner</b>. You will receive real-time Stockout Alerts and interactive Approval Cards right here!"
+        )
+
+        return {"success": True, "chat_id": chat_id, "user_name": user_name, "message": "Successfully linked your Telegram account!"}
+    
+    return {"success": False, "message": "Could not determine Chat ID from updates."}
+
 @app.post("/api/telegram/send-test")
 def telegram_send_test(req: TelegramTestAlertRequest):
     """Sends a test interactive approval alert to the owner Telegram."""

@@ -942,6 +942,55 @@
             </form>
           </div>
 
+          <!-- Live Telegram & WhatsApp Messaging Connectors -->
+          <div class="bg-surface-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between space-y-4">
+            <div>
+              <h3 class="font-bold text-white text-sm mb-2 flex items-center gap-2">
+                <i data-lucide="send" class="w-4 h-4 text-sky-400"></i> Live Telegram & WhatsApp Connectors
+              </h3>
+              <p class="text-xs text-slate-300 leading-relaxed mb-3">
+                Connect your Telegram Bot and WhatsApp Cloud API to receive real-time push alerts with inline <strong>[Approve]</strong> / <strong>[Reject]</strong> buttons directly on your phone.
+              </p>
+
+              <div class="space-y-3 text-xs">
+                <!-- Telegram Bot Status -->
+                <div class="p-3.5 rounded-xl bg-surface-950 border border-sky-500/30 space-y-2">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <i data-lucide="bot" class="w-4 h-4 text-sky-400"></i>
+                      <strong class="text-white text-xs">Telegram Bot: @KBNSN_bot</strong>
+                    </div>
+                    <span class="bg-emerald-500/20 text-emerald-300 text-[10px] px-2 py-0.5 rounded font-mono font-bold border border-emerald-500/30">ONLINE</span>
+                  </div>
+                  <p class="text-[11px] text-slate-400">
+                    Step 1: Open <a href="http://t.me/KBNSN_bot" target="_blank" class="text-sky-400 underline font-semibold">t.me/KBNSN_bot</a> on Telegram and click <strong>Start</strong>.<br>
+                    Step 2: Click below to link your phone and send a test approval card.
+                  </p>
+                  <div class="flex flex-wrap gap-2 pt-1">
+                    <button onclick="autoLinkTelegramChat()" class="bg-sky-600 hover:bg-sky-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
+                      <i data-lucide="link" class="w-3.5 h-3.5"></i> Link My Phone
+                    </button>
+                    <button onclick="sendTelegramTestApproval()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer border border-slate-700">
+                      <i data-lucide="bell-ring" class="w-3.5 h-3.5 text-amber-400"></i> Send Test Approval Alert
+                    </button>
+                  </div>
+                </div>
+
+                <!-- WhatsApp Status -->
+                <div class="p-3.5 rounded-xl bg-surface-950 border border-slate-800 flex items-center justify-between">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <i data-lucide="message-square" class="w-4 h-4 text-emerald-400"></i>
+                      <strong class="text-white text-xs">WhatsApp Cloud API & Webhook</strong>
+                    </div>
+                    <span class="text-slate-400 text-[11px] block mt-0.5">Webhook live at <code>/api/whatsapp/webhook</code></span>
+                  </div>
+                  <span class="bg-slate-800 text-slate-300 text-[10px] px-2 py-0.5 rounded font-mono border border-slate-700">Simulator Active</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Hackathon Demo State Controls -->
           <div class="bg-surface-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
             <div>

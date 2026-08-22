@@ -1343,3 +1343,45 @@ async function triggerMultiAgentSwarmCycle() {
   }
 }
 
+// -------------------------------------------------------------
+// TELEGRAM BOT LIVE INTEGRATION HELPERS
+// -------------------------------------------------------------
+
+async function autoLinkTelegramChat() {
+  try {
+    const res = await fetch('/api/telegram/auto-discover-chat', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Telegram Linked!', `Connected to ${data.user_name} (Chat ID: ${data.chat_id})`, 'success');
+    } else {
+      showToast('Telegram Link Notice', data.message, 'warning');
+    }
+  } catch (err) {
+    showToast('Telegram Error', err.message, 'error');
+  }
+}
+
+async function sendTelegramTestApproval() {
+  try {
+    const res = await fetch('/api/telegram/send-test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: "Stockout Imminent: Boat BassHeads Earphones",
+        description: "Stock will exhaust in 1.33 days! Procurement agent drafted ₹8,500 PO from ABC Electronics.",
+        amount: 8500.0,
+        approval_id: "APP-101",
+        reference_id: "PO-901"
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Alert Sent to Phone!', 'Check your Telegram app for the interactive Approval card.', 'success');
+    } else {
+      showToast('Telegram Alert Notice', data.error || 'Please link your Telegram chat first.', 'warning');
+    }
+  } catch (err) {
+    showToast('Telegram Alert Error', err.message, 'error');
+  }
+}
+

@@ -18,12 +18,53 @@ logger = logging.getLogger("telegram_service")
 
 class TelegramService:
     def __init__(self):
+        self.reload_config()
+
+    def reload_config(self):
+        # Load from .env if present
+        env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env")
+        if os.path.exists(env_path):
+            with open(env_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    if "=" in line and not line.startswith("#"):
+                        k, v = line.strip().split("=", 1)
+                        if k.strip() == "TELEGRAM_BOT_TOKEN" and v.strip():
+                            os.environ["TELEGRAM_BOT_TOKEN"] = v.strip()
+                        elif k.strip() == "TELEGRAM_OWNER_CHAT_ID" and v.strip():
+                            os.environ["TELEGRAM_OWNER_CHAT_ID"] = v.strip()
+
         self.bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
         self.owner_chat_id = os.getenv("TELEGRAM_OWNER_CHAT_ID", "").strip()
         self.base_url = f"https://api.telegram.org/bot{self.bot_token}" if self.bot_token else None
 
     def is_configured(self) -> bool:
+        self.reload_config()
         return bool(self.bot_token and len(self.bot_token) > 10)
+
+    def get_updates(self, offset: Optional[int] = None) -> List[Dict[str, Any]]:
+        """Fetches pending updates from Telegram API."""
+        if not self.is_configured():
+            return []
+        url = f"{self.base_url}/getUpdates"
+        if offset:
+            url += f"?offset={offset}&timeout=5"
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "BizPilotAI/1.0"})
+            with urllib.request.urlopen(req, timeout=10) as response:
+                data = json.loads(response.read().decode("utf-8"))
+                return data.get("result", [])
+        except Exception as e:
+            logger.error(f"Error fetching Telegram updates: {e}")
+            return []
+
+    def poll_updates_once(self) -> List[Dict[str, Any]]:
+        """Processes all pending updates once and handles them."""
+        updates = self.get_updates()
+        processed = []
+        for u in updates:
+            res = self.process_webhook_update(u)
+            processed.append({"update_id": u.get("update_id"), "result": res})
+        return processed
 
     def send_message(self, chat_id: str, text: str, reply_markup: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Sends a message to any Telegram chat."""

@@ -766,12 +766,17 @@ def update_settings(settings: SettingsUpdateRequest):
     return {"success": True, "message": "Settings updated successfully"}
 
 # -------------------------------------------------------------
-# Mount Static Files (Frontend UI)
+# Mount Static Files (React + Vite Frontend SPA)
 # -------------------------------------------------------------
+frontend_dist = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist")
 static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
-if os.path.exists(static_dir):
+
+if os.path.exists(frontend_dist):
+    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend_dist")
+elif os.path.exists(static_dir):
     app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("backend.main:app", host="127.0.0.1", port=8000, reload=True)
+

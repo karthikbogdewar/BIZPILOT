@@ -40,3 +40,20 @@ wheels/
 *.swo
 .DS_Store
 Thumbs.db
+
+# Node / Frontend
+node_modules/
+*/node_modules/
+dist/
+*/dist/
+.vite/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Antigravity / Agent runtime
+.agents/
+.agent/
+

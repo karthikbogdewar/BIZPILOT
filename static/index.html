@@ -91,6 +91,13 @@
             <i data-lucide="layout-dashboard" class="w-4 h-4 text-slate-400 group-[.active]:text-brand-400"></i>
             <span>Dashboard</span>
           </button>
+          <button onclick="switchTab('agents-squad')" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition group" data-tab="agents-squad">
+            <div class="flex items-center gap-3">
+              <i data-lucide="bot" class="w-4 h-4 text-slate-400 group-[.active]:text-brand-400"></i>
+              <span>AI Agents Squad</span>
+            </div>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 font-mono font-bold border border-brand-500/30">4 Active</span>
+          </button>
           <button onclick="switchTab('ai-agent')" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition group" data-tab="ai-agent">
             <div class="flex items-center gap-3">
               <i data-lucide="cpu" class="w-4 h-4 text-slate-400 group-[.active]:text-brand-400"></i>
@@ -978,6 +985,58 @@
 
       </div>
 
+      <!-- VIEW 10: AI AGENTS SQUAD (MULTI-AGENT SWARM) -->
+      <div id="view-agents-squad" class="tab-view hidden p-6 space-y-6 max-w-7xl mx-auto">
+        <!-- Header Banner -->
+        <div class="p-6 rounded-2xl bg-gradient-to-r from-brand-950 via-surface-900 to-indigo-950 border border-brand-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/30 border border-brand-400/40 shrink-0">
+              <i data-lucide="bot" class="w-8 h-8"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-xl font-bold text-white">BizPilot Multi-Agent Operations Swarm</h3>
+                <span class="bg-emerald-500/20 text-emerald-300 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold border border-emerald-500/30 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 4 Agents Active
+                </span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1 max-w-2xl">
+                Specialized autonomous sub-agents executing synchronized tasks across inventory velocity, conversational sales, payment collections, and procurement negotiations.
+              </p>
+            </div>
+          </div>
+          <button onclick="triggerMultiAgentSwarmCycle()" class="bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-brand-500/25 transition cursor-pointer shrink-0">
+            <i data-lucide="zap" class="w-4 h-4 text-amber-300"></i>
+            <span>Run Synchronized Swarm Cycle</span>
+          </button>
+        </div>
+
+        <!-- 4 Agent Cards Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="agents-grid-container">
+          <!-- Dynamically populated or rendered via JS -->
+        </div>
+
+        <!-- Live Agent Execution & Output Console -->
+        <div class="p-5 rounded-2xl bg-surface-900 border border-slate-800 shadow-lg">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+            <div class="flex items-center gap-2">
+              <i data-lucide="terminal" class="w-4 h-4 text-brand-400"></i>
+              <h4 class="font-bold text-sm text-white">Live Agent Task Execution Console</h4>
+            </div>
+            <span class="text-[11px] text-slate-400 font-mono" id="agent-console-status">Ready for on-demand task trigger</span>
+          </div>
+          <div id="agent-task-output" class="bg-surface-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-slate-300 min-h-[160px] max-h-[400px] overflow-y-auto whitespace-pre-wrap">
+// Select any agent task above to execute and inspect its structured JSON output & cognition trace in real time.
+{
+  "system": "BizPilot Multi-Agent Swarm",
+  "status": "ONLINE",
+  "agents_registered": 4,
+  "ready_for_execution": true
+}
+          </div>
+        </div>
+      </div>
+
     </main>
   </div>
 
@@ -1037,6 +1096,52 @@
         <button onclick="submitSimulatedWhatsAppMessage()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer">
           <i data-lucide="send" class="w-3.5 h-3.5"></i>
           <span>Process Message</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: AGENT PROMPT & SPECIFICATION INSPECTOR -->
+  <div id="agent-spec-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-surface-900 border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <!-- Header -->
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-surface-950">
+        <div class="flex items-center gap-3">
+          <div id="agent-modal-avatar" class="w-10 h-10 rounded-xl bg-brand-600/20 text-brand-400 flex items-center justify-center font-bold border border-brand-500/30">
+            <i data-lucide="bot" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h4 id="agent-modal-name" class="font-bold text-base text-white">Agent Specification</h4>
+            <span id="agent-modal-role" class="text-xs text-brand-400 font-medium">Role description</span>
+          </div>
+        </div>
+        <button onclick="closeAgentSpecModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="p-6 space-y-4 text-xs overflow-y-auto">
+        <div>
+          <label class="block text-slate-400 uppercase tracking-wider text-[10px] font-bold mb-1">Operational Context & Scope</label>
+          <div id="agent-modal-context" class="p-3 bg-surface-950 border border-slate-800 rounded-xl text-slate-300"></div>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 uppercase tracking-wider text-[10px] font-bold mb-1">Master System Instruction & Prompt</label>
+          <pre id="agent-modal-prompt" class="p-4 bg-surface-950 border border-slate-800 rounded-xl font-mono text-[11px] text-emerald-300/90 whitespace-pre-wrap overflow-x-auto"></pre>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 uppercase tracking-wider text-[10px] font-bold mb-1">Supported Tasks & Output Schema</label>
+          <div id="agent-modal-tasks" class="space-y-2"></div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="p-4 bg-surface-950 border-t border-slate-800 flex items-center justify-end">
+        <button onclick="closeAgentSpecModal()" class="bg-slate-800 hover:bg-slate-700 text-white font-medium px-4 py-2 rounded-xl text-xs transition">
+          Close Inspector
         </button>
       </div>
     </div>

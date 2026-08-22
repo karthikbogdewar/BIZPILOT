@@ -9,6 +9,7 @@ let state = {
   suppliers: [],
   approvals: [],
   activityLogs: [],
+  agents: [],
   charts: {}
 };
 
@@ -54,6 +55,7 @@ function switchTab(tabId) {
   // Update page title
   const titleMap = {
     'dashboard': 'Operational Command Dashboard',
+    'agents-squad': 'Autonomous AI Agents Squad (4 Active Workers)',
     'ai-agent': 'AI Agent Cognition & Command Center',
     'orders': 'Orders & WhatsApp Ingestion Channel',
     'inventory': 'Inventory & Stockout Prediction Engine',
@@ -66,6 +68,7 @@ function switchTab(tabId) {
   document.getElementById('page-title').innerText = titleMap[tabId] || 'BizPilot AI';
 
   // Trigger tab-specific refresh
+  if (tabId === 'agents-squad') renderAgentsSquadPage();
   if (tabId === 'inventory') renderInventoryPage();
   if (tabId === 'orders') renderOrdersPage();
   if (tabId === 'invoices') renderInvoicesPage();
@@ -88,6 +91,7 @@ async function fetchAllData() {
   try {
     await Promise.all([
       fetchDashboardData(true),
+      fetchAgents(),
       fetchProducts(),
       fetchOrders(),
       fetchInvoices(),
@@ -96,6 +100,18 @@ async function fetchAllData() {
     ]);
   } catch (err) {
     console.error('Error loading initial data:', err);
+  }
+}
+
+async function fetchAgents() {
+  try {
+    const res = await fetch('/api/agents');
+    if (res.ok) {
+      const data = await res.json();
+      state.agents = data.agents || [];
+    }
+  } catch (e) {
+    console.warn('Failed to fetch agents:', e);
   }
 }
 
@@ -1149,3 +1165,181 @@ function initCharts() {
     });
   }
 }
+
+// -------------------------------------------------------------
+// MULTI-AGENT SQUAD RENDERING & TASK RUNNERS
+// -------------------------------------------------------------
+
+async function renderAgentsSquadPage() {
+  const container = document.getElementById('agents-grid-container');
+  if (!container) return;
+
+  if (!state.agents || state.agents.length === 0) {
+    await fetchAgents();
+  }
+
+  const agentIcons = {
+    'agent_inventory': { icon: 'boxes', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/30', badge: 'Inventory & Forecasting' },
+    'agent_sales': { icon: 'message-square', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', badge: 'WhatsApp & Sales' },
+    'agent_cashflow': { icon: 'receipt', color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/30', badge: 'Receivables & Cash Flow' },
+    'agent_procurement': { icon: 'truck', color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/30', badge: 'Procurement & Vendor SLA' }
+  };
+
+  container.innerHTML = state.agents.map(agent => {
+    const meta = agentIcons[agent.agent_id] || { icon: 'bot', color: 'text-brand-400', bg: 'bg-brand-500/10', border: 'border-brand-500/30', badge: 'Operations' };
+    const tasksHtml = (agent.supported_tasks || []).map(t => `
+      <div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-950/80 border border-slate-800 hover:border-slate-700 transition">
+        <div>
+          <strong class="text-white text-xs block">${t.name}</strong>
+          <span class="text-slate-400 text-[11px]">${t.description}</span>
+        </div>
+        <button onclick="runAgentTaskLive('${agent.agent_id}', '${t.task_id}')" class="bg-slate-800 hover:bg-brand-600 text-slate-200 hover:text-white px-2.5 py-1.5 rounded-md text-[11px] font-semibold transition flex items-center gap-1 shrink-0 ml-2 cursor-pointer">
+          <i data-lucide="play" class="w-3 h-3"></i> Run
+        </button>
+      </div>
+    `).join('');
+
+    return `
+      <div class="p-5 rounded-2xl bg-surface-900 border ${meta.border} shadow-xl flex flex-col justify-between space-y-4">
+        <div>
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-xl ${meta.bg} ${meta.color} flex items-center justify-center border ${meta.border}">
+                <i data-lucide="${meta.icon}" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-sm text-white flex items-center gap-2">
+                  ${agent.name}
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Agent Online"></span>
+                </h4>
+                <span class="text-[11px] font-mono ${meta.color}">${meta.badge}</span>
+              </div>
+            </div>
+            <button onclick="openAgentSpecModal('${agent.agent_id}')" class="text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 px-2.5 py-1 rounded-lg text-[11px] flex items-center gap-1 transition cursor-pointer">
+              <i data-lucide="file-code" class="w-3 h-3 text-brand-400"></i> Prompt Spec
+            </button>
+          </div>
+
+          <div class="mt-3.5 space-y-2">
+            <div>
+              <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Role</span>
+              <p class="text-xs text-slate-200">${agent.role}</p>
+            </div>
+            <div>
+              <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Context Scope</span>
+              <p class="text-[11px] text-slate-400">${agent.context}</p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider mb-2">Callable Agent Tasks</span>
+          <div class="space-y-1.5">
+            ${tasksHtml}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  if (window.lucide) {
+    lucide.createIcons();
+  }
+}
+
+function openAgentSpecModal(agentId) {
+  const agent = state.agents.find(a => a.agent_id === agentId);
+  if (!agent) return;
+
+  document.getElementById('agent-modal-name').innerText = agent.name;
+  document.getElementById('agent-modal-role').innerText = agent.role;
+  document.getElementById('agent-modal-context').innerText = agent.context;
+  document.getElementById('agent-modal-prompt').innerText = agent.system_prompt;
+
+  const tasksContainer = document.getElementById('agent-modal-tasks');
+  tasksContainer.innerHTML = (agent.supported_tasks || []).map(t => `
+    <div class="p-2.5 rounded-lg bg-surface-900 border border-slate-800">
+      <div class="flex items-center justify-between">
+        <strong class="text-white text-xs">${t.name} (<code>${t.task_id}</code>)</strong>
+      </div>
+      <p class="text-slate-400 text-[11px] mt-0.5">${t.description}</p>
+      ${Object.keys(t.parameters || {}).length > 0 ? `
+        <div class="mt-1.5 pt-1.5 border-t border-slate-800/80 font-mono text-[10px] text-brand-300">
+          Params: ${JSON.stringify(t.parameters)}
+        </div>
+      ` : ''}
+    </div>
+  `).join('');
+
+  document.getElementById('agent-spec-modal').classList.remove('hidden');
+  if (window.lucide) {
+    lucide.createIcons();
+  }
+}
+
+function closeAgentSpecModal() {
+  document.getElementById('agent-spec-modal').classList.add('hidden');
+}
+
+async function runAgentTaskLive(agentId, taskId, customPayload = {}) {
+  const consoleEl = document.getElementById('agent-task-output');
+  const statusEl = document.getElementById('agent-console-status');
+
+  if (statusEl) statusEl.innerText = `Executing [${agentId}] task '${taskId}'...`;
+  if (consoleEl) {
+    consoleEl.innerText = `// Dispatched task '${taskId}' to ${agentId} at ${new Date().toLocaleTimeString()}...\n// Awaiting autonomous cognitive output...\n`;
+  }
+
+  try {
+    const res = await fetch(`/api/agents/${agentId}/run`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ task_name: taskId, payload: customPayload })
+    });
+
+    const data = await res.json();
+    if (consoleEl) {
+      consoleEl.innerText = JSON.stringify(data, null, 2);
+    }
+    if (statusEl) {
+      statusEl.innerText = `Task completed in ${res.ok ? 'SUCCESS' : 'ERROR'}`;
+    }
+
+    showToast('Agent Task Executed', `[${agentId}] ${taskId} completed successfully!`, 'success');
+    
+    // Refresh background state
+    fetchDashboardData(false);
+  } catch (err) {
+    if (consoleEl) consoleEl.innerText = `// Execution Error:\n${err.message}`;
+    showToast('Agent Task Error', err.message, 'error');
+  }
+}
+
+async function triggerMultiAgentSwarmCycle() {
+  const consoleEl = document.getElementById('agent-task-output');
+  const statusEl = document.getElementById('agent-console-status');
+
+  if (statusEl) statusEl.innerText = 'Synchronizing Multi-Agent Swarm Cycle...';
+  if (consoleEl) {
+    consoleEl.innerText = `// Initiating 4-Agent Coordinated Operations Swarm...\n// 1. Inventory Sentinel: Scanning Days-to-Stockout velocity...\n// 2. Supplier Procurement Agent: Evaluating multi-vendor matrices...\n// 3. Cash Flow Agent: Auditing receivables & staging overdue collections...\n// 4. WhatsApp Agent: Polling inbound customer channels...\n`;
+  }
+
+  try {
+    const res = await fetch('/api/agents/swarm/cycle', { method: 'POST' });
+    const data = await res.json();
+
+    if (consoleEl) {
+      consoleEl.innerText = JSON.stringify(data, null, 2);
+    }
+    if (statusEl) {
+      statusEl.innerText = 'Swarm cycle completed successfully across all 4 agents';
+    }
+
+    showToast('Swarm Synchronized', 'All 4 agents completed synchronized operations cycle!', 'success');
+    await fetchAllData();
+  } catch (err) {
+    if (consoleEl) consoleEl.innerText = `// Swarm Error:\n${err.message}`;
+    showToast('Swarm Error', err.message, 'error');
+  }
+}
+

@@ -8,6 +8,7 @@ import json
 
 from backend.database import init_db, get_db_connection
 from backend.agent_engine import agent_service
+from backend.agents.orchestrator import agent_orchestrator
 
 # Initialize database on startup
 init_db(force_reset=False)
@@ -48,8 +49,42 @@ class SettingsUpdateRequest(BaseModel):
     auto_pilot_enabled: int
     approval_required_above: float
 
+class AgentTaskRequest(BaseModel):
+    task_name: str
+    payload: Optional[Dict[str, Any]] = None
+
 # -------------------------------------------------------------
-# API Endpoints
+# Multi-Agent Squad Endpoints
+# -------------------------------------------------------------
+
+@app.get("/api/agents")
+def list_all_agents():
+    """Returns manifests, roles, contexts, prompts, and tasks for all 4 specialized agents."""
+    return {"agents": agent_orchestrator.list_agents()}
+
+@app.get("/api/agents/{agent_id}")
+def get_agent_spec(agent_id: str):
+    """Returns specification and prompt for a specific agent."""
+    spec = agent_orchestrator.get_agent(agent_id)
+    if not spec:
+        raise HTTPException(status_code=404, detail=f"Agent '{agent_id}' not found")
+    return spec
+
+@app.post("/api/agents/{agent_id}/run")
+def run_agent_task(agent_id: str, req: AgentTaskRequest):
+    """Executes an on-demand task for a specialized agent."""
+    result = agent_orchestrator.execute_agent_task(agent_id, req.task_name, req.payload)
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error", "Task execution failed"))
+    return result
+
+@app.post("/api/agents/swarm/cycle")
+def run_multi_agent_swarm_cycle():
+    """Runs a synchronized 4-agent collaborative operations scan."""
+    return agent_orchestrator.run_full_swarm_cycle()
+
+# -------------------------------------------------------------
+# Operational Dashboard Endpoints
 # -------------------------------------------------------------
 
 @app.get("/api/dashboard")

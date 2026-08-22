@@ -99,7 +99,7 @@ class TelegramService:
     def stop_background_poller(self):
         self._is_polling = False
 
-    def send_message(self, chat_id: str, text: str, reply_markup: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def send_message(self, chat_id: str, text: str, reply_markup: Optional[Dict[str, Any]] = None, parse_mode: str = "HTML") -> Dict[str, Any]:
         """Sends a message to any Telegram chat."""
         if not self.is_configured():
             return {"success": False, "error": "TELEGRAM_BOT_TOKEN not configured in .env"}
@@ -108,7 +108,7 @@ class TelegramService:
         payload = {
             "chat_id": chat_id,
             "text": text,
-            "parse_mode": "HTML"
+            "parse_mode": parse_mode
         }
         if reply_markup:
             payload["reply_markup"] = json.dumps(reply_markup)
@@ -125,6 +125,14 @@ class TelegramService:
         except Exception as e:
             logger.error(f"Failed to send Telegram message: {e}")
             return {"success": False, "error": str(e)}
+
+    def send_telegram_message(self, text: str, chat_id: Optional[str] = None, parse_mode: str = "HTML") -> Dict[str, Any]:
+        """Convenience method to send a Telegram message to the owner or specified chat."""
+        target_chat = chat_id or self.owner_chat_id or os.getenv("TELEGRAM_OWNER_CHAT_ID", "").strip()
+        if not target_chat:
+            logger.info(f"[TELEGRAM SIMULATED] Message: {text}")
+            return {"success": True, "simulated": True}
+        return self.send_message(chat_id=target_chat, text=text, parse_mode=parse_mode)
 
     def send_owner_approval_alert(self, title: str, description: str, amount: float, approval_id: str, reference_id: str) -> Dict[str, Any]:
         """

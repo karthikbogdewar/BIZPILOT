@@ -54,6 +54,12 @@ class AgentTaskRequest(BaseModel):
     task_name: str
     payload: Optional[Dict[str, Any]] = None
 
+class KhataReminderRequest(BaseModel):
+    invoice_id: str
+    tone: Optional[str] = "polite"
+    language: Optional[str] = "en"
+    channel: Optional[str] = "telegram"
+
 @app.on_event("startup")
 def startup_event():
     telegram_service.start_background_poller(interval_seconds=1.0)
@@ -388,6 +394,123 @@ def simulate_invoice_payment(invoice_id: str):
         "status": "Paid",
         "message": f"Successfully simulated UPI payment of ₹{inv['amount']:,.2f}!"
     }
+
+# -------------------------------------------------------------
+# Customer Khata (Credit Ledger) & Smart Multi-Tone Reminders
+# -------------------------------------------------------------
+
+@app.get("/api/khata/ledger")
+def get_khata_ledger():
+    """Returns customer-wise credit ledger, outstanding khata balances, and aging stats."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    customers = [dict(c) for c in cursor.execute("SELECT * FROM customers").fetchall()]
+    invoices = [dict(i) for i in cursor.execute("SELECT * FROM invoices ORDER BY due_date ASC").fetchall()]
+    conn.close()
+
+    now = datetime.now()
+    ledger = []
+    total_khata_outstanding = 0.0
+    total_khata_overdue = 0.0
+
+    for c in customers:
+        c_invoices = [i for i in invoices if i['customer_id'] == c['id']]
+        unpaid = [i for i in c_invoices if i['status'] != 'Paid']
+        overdue = []
+        for inv in unpaid:
+            due_dt = datetime.strptime(inv['due_date'], '%Y-%m-%d')
+            if now > due_dt:
+                inv['days_overdue'] = (now - due_dt).days
+                overdue.append(inv)
+            else:
+                inv['days_overdue'] = 0
+
+        balance = sum(i['amount'] for i in unpaid)
+        overdue_balance = sum(i['amount'] for i in overdue)
+        total_khata_outstanding += balance
+        total_khata_overdue += overdue_balance
+
+        # Health score
+        if overdue_balance > 10000 or (overdue and max(i['days_overdue'] for i in overdue) > 14):
+            risk = "Default Risk 🔴"
+            risk_color = "rose"
+        elif overdue_balance > 0:
+            risk = "Caution 🟡"
+            risk_color = "amber"
+        else:
+            risk = "Healthy 🟢"
+            risk_color = "emerald"
+
+        ledger.append({
+            "customer_id": c['id'],
+            "customer_name": c['name'],
+            "company": c.get('company') or "Direct Customer",
+            "phone": c['phone'],
+            "credit_limit": c.get('credit_limit', 50000.0),
+            "outstanding_balance": balance,
+            "overdue_balance": overdue_balance,
+            "unpaid_invoices_count": len(unpaid),
+            "overdue_invoices_count": len(overdue),
+            "risk_assessment": risk,
+            "risk_color": risk_color,
+            "invoices": unpaid
+        })
+
+    # Sort by overdue balance descending
+    ledger.sort(key=lambda x: x['overdue_balance'], reverse=True)
+
+    return {
+        "summary": {
+            "total_khata_outstanding": total_khata_outstanding,
+            "total_khata_overdue": total_khata_overdue,
+            "total_customers": len(customers),
+            "delinquent_customers_count": len([c for c in ledger if c['overdue_balance'] > 0])
+        },
+        "ledger": ledger
+    }
+
+@app.post("/api/khata/send-reminder")
+def send_khata_reminder(req: KhataReminderRequest):
+    """Generates localized multi-tone Khata reminder and dispatches via Telegram/WhatsApp."""
+    from backend.agents.cashflow_agent import CashflowAgent
+    cf = CashflowAgent()
+    res = cf.execute_task("generate_khata_reminder", {
+        "invoice_id": req.invoice_id,
+        "tone": req.tone,
+        "language": req.language
+    })
+
+    if res.get("status") == "COMPLETED":
+        msg = res.get("formatted_reminder_message")
+        # Push to Telegram if configured
+        if req.channel == "telegram":
+            telegram_service.send_telegram_message(
+                text=f"📢 *Customer Khata Reminder Dispatched*\n\n{msg}",
+                parse_mode="Markdown"
+            )
+        elif req.channel == "whatsapp":
+            whatsapp_service.send_text_message(
+                to_phone="919876543210",
+                text=msg
+            )
+
+        # Log Activity
+        conn = get_db_connection()
+        now = datetime.now()
+        conn.cursor().execute("""
+            INSERT INTO activity_logs (timestamp, time_display, category, severity, title, detail, automated)
+            VALUES (?, ?, 'Payments', 'info', ?, ?, 1)
+        """, (
+            now.strftime('%Y-%m-%d %H:%M:%S'),
+            now.strftime('%I:%M %p'),
+            f"Khata Reminder Dispatched ({req.tone.capitalize()} / {req.language.upper()})",
+            f"Sent {req.tone} reminder for {req.invoice_id} ({res.get('customer_name')}) of ₹{res.get('amount', 0):,.2f} via {req.channel.capitalize()}."
+        ))
+        conn.commit()
+        conn.close()
+
+    return res
 
 @app.post("/api/ai/voice-query")
 def ai_voice_query(req: VoiceQueryRequest):

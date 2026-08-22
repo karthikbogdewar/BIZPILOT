@@ -501,8 +501,8 @@ function renderInvoicesPage() {
             <i data-lucide="receipt" class="w-3 h-3 text-teal-400"></i> GST Bill
           </button>
           ${isOverdue ? `
-            <button onclick="switchTab('approvals')" class="bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 border border-amber-500/40 text-[11px] px-2 py-1 rounded-lg transition font-semibold flex items-center gap-1 cursor-pointer">
-              <i data-lucide="send" class="w-3 h-3"></i> Reminder
+            <button onclick="openKhataReminderModal('${inv.id}', '${inv.customer_name}', ${inv.amount})" class="bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 border border-amber-500/40 text-[11px] px-2 py-1 rounded-lg transition font-semibold flex items-center gap-1 cursor-pointer" title="Send Localized Khata Reminder">
+              <i data-lucide="bell-ring" class="w-3 h-3 text-amber-400"></i> Khata Alert
             </button>
           ` : ''}
         </div>
@@ -1909,4 +1909,133 @@ function closeGstInvoiceModal() {
   const modal = document.getElementById('gst-invoice-modal');
   if (modal) modal.classList.add('hidden');
 }
+
+// -------------------------------------------------------------
+// 5. CUSTOMER KHATA (CREDIT LEDGER) REMINDER DISPATCHER
+// -------------------------------------------------------------
+let activeKhataInvoiceId = null;
+let activeKhataTone = 'polite';
+let activeKhataLang = 'en';
+
+async function openKhataReminderModal(invId, customerName, amount, daysOverdue = 3) {
+  activeKhataInvoiceId = invId;
+  activeKhataTone = 'polite';
+  activeKhataLang = currentDashboardLanguage || 'en';
+
+  const modal = document.getElementById('khata-reminder-modal');
+  const custEl = document.getElementById('khata-modal-customer');
+  const invEl = document.getElementById('khata-modal-inv');
+  const amtEl = document.getElementById('khata-modal-amount');
+
+  if (custEl) custEl.innerText = customerName || 'Customer';
+  if (invEl) invEl.innerText = `${invId} (${daysOverdue}d overdue)`;
+  if (amtEl) amtEl.innerText = `₹${parseFloat(amount || 0).toLocaleString('en-IN')}`;
+
+  setKhataTone('polite', false);
+  setKhataLanguage(activeKhataLang, false);
+  await updateKhataMessagePreview();
+
+  if (modal) modal.classList.remove('hidden');
+  if (window.lucide) lucide.createIcons();
+}
+
+function closeKhataModal() {
+  const modal = document.getElementById('khata-reminder-modal');
+  if (modal) modal.classList.add('hidden');
+  activeKhataInvoiceId = null;
+}
+
+function setKhataTone(tone, reload = true) {
+  activeKhataTone = tone;
+  ['polite', 'formal', 'urgent'].forEach(t => {
+    const btn = document.getElementById(`khata-tone-${t}`);
+    if (btn) {
+      if (t === tone) {
+        btn.className = 'p-2.5 rounded-xl border bg-brand-950/80 border-brand-500 text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer';
+      } else {
+        btn.className = 'p-2.5 rounded-xl border bg-surface-950 border-slate-800 text-slate-400 hover:text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer';
+      }
+    }
+  });
+
+  if (reload) updateKhataMessagePreview();
+}
+
+function setKhataLanguage(lang, reload = true) {
+  activeKhataLang = lang;
+  ['en', 'te', 'hi', 'kn', 'ta'].forEach(l => {
+    const btn = document.getElementById(`khata-lang-${l}`);
+    if (btn) {
+      if (l === lang) {
+        btn.className = 'px-2.5 py-1 rounded-lg border bg-brand-950/80 border-brand-500 text-brand-200 text-xs font-medium cursor-pointer';
+      } else {
+        btn.className = 'px-2.5 py-1 rounded-lg border bg-surface-950 border-slate-800 text-slate-400 hover:text-white text-xs font-medium cursor-pointer';
+      }
+    }
+  });
+
+  if (reload) updateKhataMessagePreview();
+}
+
+async function updateKhataMessagePreview() {
+  const textarea = document.getElementById('khata-message-preview');
+  if (!textarea || !activeKhataInvoiceId) return;
+
+  textarea.value = 'Generating intelligent localized Khata reminder...';
+
+  try {
+    const res = await fetch('/api/agents/task', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        agent_id: 'agent_cashflow',
+        task_name: 'generate_khata_reminder',
+        payload: {
+          invoice_id: activeKhataInvoiceId,
+          tone: activeKhataTone,
+          language: activeKhataLang
+        }
+      })
+    });
+    const data = await res.json();
+    if (data.result && data.result.formatted_reminder_message) {
+      textarea.value = data.result.formatted_reminder_message;
+    }
+  } catch (err) {
+    textarea.value = `Hi! Gentle reminder regarding invoice ${activeKhataInvoiceId}. Kindly settle via UPI: upi://pay?pa=bizpilot@icici Thank you!`;
+  }
+}
+
+async function dispatchKhataReminder(channel = 'telegram') {
+  if (!activeKhataInvoiceId) return;
+
+  try {
+    const res = await fetch('/api/khata/send-reminder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        invoice_id: activeKhataInvoiceId,
+        tone: activeKhataTone,
+        language: activeKhataLang,
+        channel: channel
+      })
+    });
+    const data = await res.json();
+    if (data.status === 'COMPLETED') {
+      showToast('Khata Reminder Sent! 🚀', `Dispatched ${activeKhataTone} reminder in ${activeKhataLang.toUpperCase()} for ${activeKhataInvoiceId} via ${channel.toUpperCase()}!`, 'success');
+      closeKhataModal();
+      await fetchAllData();
+    }
+  } catch (err) {
+    showToast('Dispatch Error', err.message, 'error');
+  }
+}
+
+function copyKhataMessage() {
+  const textarea = document.getElementById('khata-message-preview');
+  if (!textarea) return;
+  navigator.clipboard.writeText(textarea.value);
+  showToast('Copied to Clipboard', 'Khata reminder text ready to paste in WhatsApp/SMS.', 'info');
+}
+
 

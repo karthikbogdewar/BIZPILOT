@@ -111,56 +111,58 @@ class SalesAgent(BaseBizPilotAgent):
             lower_msg = raw_msg.lower()
             parsed_items = []
 
-            for p in products:
-                p_name_lower = p['name'].lower()
-                keywords = [k for k in p_name_lower.split() if len(k) > 3]
+            # Synonym & Keyword Map for accurate catalog mapping
+            SYNONYMS = {
+                'PRD-101': ['boat', 'bassheads', 'earphone', 'earphones', 'headphone', 'headphones', 'ear piece', 'headset', 'in-ear'],
+                'PRD-102': ['charger', 'chargers', 'gan', 'fast charger', '65w', 'adapter', 'charging adapter', 'chager'],
+                'PRD-103': ['cable', 'cables', 'type-c', 'type c', 'typec', 'braided', 'wire', 'data cable', 'c cable', 'lead'],
+                'PRD-104': ['nord', 'nord buds', 'tws', 'airpods', 'buds', 'earbuds', 'wireless buds', 'oneplus'],
+                'PRD-105': ['watch', 'smartwatch', 'smart watch', 'fastrack', 'wrist watch'],
+                'PRD-106': ['sandisk', 'microsd', 'sd card', 'memory card', '128gb', 'card', 'storage'],
+                'PRD-107': ['phone', 'mobile', 'smartphone', 'redmi', 'handset', 'cellphone', '5g phone'],
+                'PRD-108': ['power bank', 'powerbank', 'power-bank', 'mi power bank', 'portable charger', 'battery pack']
+            }
 
-                # Match patterns like: "2 boat earphones", "10 chargers", "5 cables"
-                patterns = [
-                    rf"(\d+)\s*(?:units?|pcs?|pieces?|pack?|packs?)?\s*(?:of\s*)?{re.escape(p_name_lower)}",
-                    rf"{re.escape(p_name_lower)}\s*(?:x\s*)?(\d+)"
-                ]
-                for k in keywords:
-                    patterns.append(rf"(\d+)\s*(?:units?|pcs?|pieces?|pack?|packs?)?\s*(?:of\s*)?(?:[\w\-]+\s+)?{re.escape(k)}")
-
-                matched_qty = None
-                for pattern in patterns:
-                    match = re.search(pattern, lower_msg)
-                    if match:
-                        matched_qty = int(match.group(1))
-                        break
-
-                if matched_qty is None:
-                    # Check if keyword mentioned alone
-                    if any(k in lower_msg for k in keywords) and p_name_lower in lower_msg:
-                        matched_qty = 1
-
-                if matched_qty and matched_qty > 0:
-                    parsed_items.append({
-                        "product_id": p['id'],
-                        "name": p['name'],
-                        "qty": matched_qty,
-                        "unit_price": p['unit_price'],
-                        "total_price": round(matched_qty * p['unit_price'], 2),
-                        "available_stock": p['stock']
-                    })
-
-            # Multilingual Localization Engine
             from backend.agents.multilingual_agent import MultilingualAgent, INDIC_NUMBERS
             ml_agent = MultilingualAgent()
             detected_lang = ml_agent.detect_language(raw_msg)
 
-            # Check Indic number words in message if regular digits not found
+            # 1. First pass: Check specific product name & regex patterns
+            for p in products:
+                pid = p['id']
+                p_name_lower = p['name'].lower()
+                syns = SYNONYMS.get(pid, []) + [p_name_lower]
+
+                for syn in syns:
+                    patterns = [
+                        rf"(\d+)\s*(?:units?|pcs?|pieces?|pack?|packs?|boxes?)?\s*(?:of\s*)?{re.escape(syn)}",
+                        rf"{re.escape(syn)}\s*(?:x\s*)?(\d+)"
+                    ]
+                    for pattern in patterns:
+                        match = re.search(pattern, lower_msg)
+                        if match:
+                            qty = int(match.group(1))
+                            if not any(it['product_id'] == pid for it in parsed_items):
+                                parsed_items.append({
+                                    "product_id": pid,
+                                    "name": p['name'],
+                                    "qty": qty,
+                                    "unit_price": p['unit_price'],
+                                    "total_price": round(qty * p['unit_price'], 2),
+                                    "available_stock": p['stock']
+                                })
+                            break
+
+            # 2. Second pass: Check Indic numbers (ek, do, teen, okati, rendu, etc.)
             for num_word, val in INDIC_NUMBERS.items():
                 if f" {num_word} " in f" {lower_msg} ":
                     for p in products:
-                        p_name_lower = p['name'].lower()
-                        keywords = [k for k in p_name_lower.split() if len(k) > 3]
-                        if any(k in lower_msg for k in keywords):
-                            # Replace or append if not already parsed
-                            if not any(it['product_id'] == p['id'] for it in parsed_items):
+                        pid = p['id']
+                        syns = SYNONYMS.get(pid, []) + [p['name'].lower()]
+                        if any(s in lower_msg for s in syns):
+                            if not any(it['product_id'] == pid for it in parsed_items):
                                 parsed_items.append({
-                                    "product_id": p['id'],
+                                    "product_id": pid,
                                     "name": p['name'],
                                     "qty": val,
                                     "unit_price": p['unit_price'],
@@ -168,35 +170,59 @@ class SalesAgent(BaseBizPilotAgent):
                                     "available_stock": p['stock']
                                 })
 
+            # 3. Third pass: If product mentioned without quantity, default to 1 unit ONLY if clearly intending to buy
+            if not parsed_items:
+                buy_intent_words = ['need', 'want', 'send', 'order', 'kavali', 'bhejo', 'chahiye', 'beku', 'venum', 'pampandi', 'anupunga', 'kodu']
+                has_buy_intent = any(w in lower_msg for w in buy_intent_words)
+
+                for p in products:
+                    pid = p['id']
+                    syns = SYNONYMS.get(pid, [])
+                    if any(re.search(rf"\b{re.escape(s)}\b", lower_msg) for s in syns):
+                        if not any(it['product_id'] == pid for it in parsed_items):
+                            parsed_items.append({
+                                "product_id": pid,
+                                "name": p['name'],
+                                "qty": 1,
+                                "unit_price": p['unit_price'],
+                                "total_price": p['unit_price'],
+                                "available_stock": p['stock']
+                            })
+
             # Deduplicate parsed items
             unique_items = {}
             for it in parsed_items:
                 unique_items[it['product_id']] = it
             parsed_items = list(unique_items.values())
 
-            # Fallback if no specific quantity extracted
-            if not parsed_items and len(products) > 0:
-                for p in products:
-                    if p['name'].lower().split()[0] in lower_msg:
-                        parsed_items.append({
-                            "product_id": p['id'],
-                            "name": p['name'],
-                            "qty": 2,
-                            "unit_price": p['unit_price'],
-                            "total_price": round(2 * p['unit_price'], 2),
-                            "available_stock": p['stock']
-                        })
-                        break
-
+            # 4. IF STILL NO PRODUCTS MATCHED: DO NOT CREATE FAKE ORDER! Return helpful catalog inquiry reply.
             if not parsed_items:
-                parsed_items = [{
-                    "product_id": products[0]['id'],
-                    "name": products[0]['name'],
-                    "qty": 1,
-                    "unit_price": products[0]['unit_price'],
-                    "total_price": products[0]['unit_price'],
-                    "available_stock": products[0]['stock']
-                }]
+                conn.close()
+                if detected_lang == 'te':
+                    catalog_reply = f"నమస్కారం {customer_name}! శ్రీ లక్ష్మి ఎలక్ట్రానిక్స్ కు స్వాగతం. మీ సందేశంలో ఆర్డర్ వివరాలు స్పష్టంగా లేవు. మా వద్ద లభించే వస్తువులు:\n• 🎧 Boat ఇయర్ ఫోన్లు (₹699)\n• ⚡ 65W GaN ఫాస్ట్ ఛార్జర్ (₹1,299)\n• 🔌 100W Type-C కేబుల్ (₹399)\n• 📱 Redmi Note 13 5G మొబైల్ (₹15,499)\n• 🔋 20000mAh పవర్ బ్యాంక్ (₹1,899)\n• ⌚ స్మార్ట్ వాచ్ (₹1,999)\n\nదయచేసి మీకు ఏ వస్తువు మరియు ఎన్ని కావాలో చెప్పండి (ఉదా: '2 ఛార్జర్లు మరియు 1 మొబైల్ కావాలి')."
+                elif detected_lang == 'hi':
+                    catalog_reply = f"नमस्ते {customer_name}! श्री लक्ष्मी इलेक्ट्रॉनिक्स में आपका स्वागत है। आपके संदेश में प्रोडक्ट की जानकारी स्पष्ट नहीं है। हमारे पास उपलब्ध हैं:\n• 🎧 Boat ईयरफोन (₹699)\n• ⚡ 65W फास्ट चार्जर (₹1,299)\n• 🔌 Type-C केबल (₹399)\n• 📱 Redmi 5G स्मार्टफोन (₹15,499)\n• 🔋 20000mAh पावर बैंक (₹1,899)\n• ⌚ स्मार्टवॉच (₹1,999)\n\nकृपया बताएं आपको क्या और कितना चाहिए (जैसे: '2 चार्जर और 1 फोन चाहिए')।"
+                elif detected_lang == 'kn':
+                    catalog_reply = f"ನಮಸ್ಕಾರ {customer_name}! ಶ್ರೀ ಲಕ್ಷ್ಮೀ ಎಲೆಕ್ಟ್ರಾನಿಕ್ಸ್ ಗೆ ಸುಸ್ವಾಗತ. ನಮ್ಮಲ್ಲಿ ಲಭ್ಯವಿರುವ ವಸ್ತುಗಳು: ಇಯರ್ ಫೋನ್ ಗಳು (₹699), 65W ಫಾಸ್ಟ್ ಚಾರ್ಜರ್ (₹1,299), Type-C ಕೇಬಲ್ (₹399), Redmi 5G ಮೊಬೈಲ್ (₹15,499), ಪವರ್ ಬ್ಯಾಂಕ್ (₹1,899). ದಯವಿಟ್ಟು ನಿಮಗೆ ಎಷ್ಟು ಬೇಕು ತಿಳಿಸಿ."
+                elif detected_lang == 'ta':
+                    catalog_reply = f"வணக்கம் {customer_name}! ஸ்ரீ லக்ஷ்மி எலக்ட்ரானிக்ஸுக்கு வரவேற்கிறோம். எங்களிடம் இயர்போன்கள் (₹699), 65W பாஸ்ட் சார்ஜர் (₹1,299), Type-C கேபிள் (₹399), Redmi 5G மொபைல் (₹15,499), பவர் பேங்க் (₹1,899) உள்ளன. என்ன வேண்டும் என்று குறிப்பிடவும்."
+                else:
+                    catalog_reply = f"Hello {customer_name}! Welcome to Sri Lakshmi Electronics. We couldn't recognize specific items in your message. Here is what we stock:\n• 🎧 Boat BassHeads Earphones (₹699)\n• ⚡ 65W Fast GaN Charger (₹1,299)\n• 🔌 100W Braided Type-C Cable (₹399)\n• 📱 Redmi Note 13 5G Smartphone (₹15,499)\n• 🔋 Mi 20000mAh Fast Power Bank (₹1,899)\n• ⌚ Fastrack Smartwatch (₹1,999)\n\nPlease let us know what you'd like to order (e.g. 'I need 2 chargers and 1 phone')."
+
+                return {
+                    "agent_id": self.agent_id,
+                    "agent_name": self.name,
+                    "task": task_name,
+                    "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                    "status": "INQUIRY_REPLIED",
+                    "order_created": False,
+                    "customer_name": customer_name,
+                    "detected_language": detected_lang,
+                    "items_parsed": [],
+                    "total_amount": 0.0,
+                    "drafted_reply": catalog_reply,
+                    "summary": f"Inquiry from {customer_name} replied with product catalog. No order created."
+                }
 
             total_amount = sum(item['total_price'] for item in parsed_items)
             now = datetime.now()
@@ -248,7 +274,8 @@ class SalesAgent(BaseBizPilotAgent):
                 lang=detected_lang,
                 customer_name=customer_name,
                 items=parsed_items,
-                total=total_amount,
+                total_amount=total_amount,
+                order_id=order_id,
                 invoice_id=inv_id
             )
 
@@ -258,6 +285,8 @@ class SalesAgent(BaseBizPilotAgent):
                 "task": task_name,
                 "timestamp": now.strftime('%Y-%m-%d %H:%M:%S'),
                 "status": "COMPLETED",
+                "success": True,
+                "order_created": True,
                 "detected_language": detected_lang,
                 "order_id": order_id,
                 "invoice_id": inv_id,

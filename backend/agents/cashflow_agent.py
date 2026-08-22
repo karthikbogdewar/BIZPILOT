@@ -187,6 +187,92 @@ class CashflowAgent(BaseBizPilotAgent):
                 "runway_health": "Healthy" if projected_net > 50000 else ("Moderate" if projected_net > 10000 else "Critical Working Capital Warning")
             }
 
+        elif task_name == "generate_khata_reminder":
+            invoice_id = payload.get("invoice_id")
+            tone = payload.get("tone", "polite").lower() # polite | formal | urgent
+            lang = payload.get("language", "en").lower()  # en | te | hi | kn | ta
+
+            inv = None
+            if invoice_id:
+                inv = cursor.execute("SELECT * FROM invoices WHERE id = ?", (invoice_id,)).fetchone()
+            if not inv:
+                # Pick oldest overdue or pending invoice
+                inv = cursor.execute("SELECT * FROM invoices WHERE status != 'Paid' ORDER BY due_date ASC LIMIT 1").fetchone()
+            
+            if not inv:
+                conn.close()
+                return {
+                    "agent_id": self.agent_id,
+                    "task": task_name,
+                    "status": "FAILED",
+                    "error": "No pending or overdue invoices found for reminder."
+                }
+
+            inv = dict(inv)
+            amt = inv['amount']
+            cust_name = inv['customer_name']
+            due_dt = datetime.strptime(inv['due_date'], '%Y-%m-%d')
+            days_overdue = max(0, (now - due_dt).days)
+            upi_link = f"upi://pay?pa=bizpilot@icici&pn=Sri%20Lakshmi%20Electronics&am={amt:.0f}&tr={inv['id']}&tn=Khata%20Settlement"
+
+            # Multi-Tone & Multilingual Template Synthesis
+            if tone == "urgent":
+                if lang == "te":
+                    msg = f"🚨 అత్యవసర హెచ్చరిక: {cust_name} గారు, శ్రీ లక్ష్మి ఎలక్ట్రానిక్స్ ఇన్వాయిస్ {inv['id']} మొత్తం ₹{amt:,.2f} గత {days_overdue} రోజులుగా బకాయి ఉంది. మీ తదుపరి ఆర్డర్లు మరియు క్రెడిట్ నిలిపివేయబడింది. ఖాతా పునరుద్ధరణకు దయచేసి వెంటనే చెల్లించండి:\n👉 UPI లింక్: {upi_link}"
+                elif lang == "hi":
+                    msg = f"🚨 अति आवश्यक सूचना: {cust_name} जी, श्री लक्ष्मी इलेक्ट्रॉनिक्स के इनवॉइस {inv['id']} की ₹{amt:,.2f} राशि {days_overdue} दिनों से बकाया है। आगे का क्रेडिट रोक दिया गया है। तुरंत भुगतान करें:\n👉 UPI लिंक: {upi_link}"
+                elif lang == "kn":
+                    msg = f"🚨 ತುರ್ತು ಸೂಚನೆ: {cust_name} ರವರೇ, ಇನ್ವಾಯ್ಸ್ {inv['id']} ಮೊತ್ತ ₹{amt:,.2f} ಬಾಕಿ ಇದೆ. ನಿಮ್ಮ ಕ್ರೆಡಿಟ್ ಖಾತೆ ಮುಂದುವರಿಸಲು ತಕ್ಷಣ ಪಾವತಿಸಿ:\n👉 UPI: {upi_link}"
+                elif lang == "ta":
+                    msg = f"🚨 முக்கிய எச்சரிக்கை: {cust_name} அவர்களே, இன்வாய்ஸ் {inv['id']} தொகை ₹{amt:,.2f} நிலுவையில் உள்ளது. உடனே செலுத்தவும்:\n👉 UPI: {upi_link}"
+                else:
+                    msg = f"🚨 URGENT NOTICE: {cust_name}, Invoice {inv['id']} for ₹{amt:,.2f} is {days_overdue} days past due. Credit terms are temporarily on hold. Please settle immediately via UPI:\n👉 {upi_link}"
+
+            elif tone == "formal":
+                if lang == "te":
+                    msg = f"📄 అధికారిక సమాచారం: గౌరవనీయులైన {cust_name} గారికి, శ్రీ లక్ష్మి ఎలక్ట్రానిక్స్ నుండి ఇన్వాయిస్ {inv['id']} (మొత్తం: ₹{amt:,.2f}, గడువు: {due_dt.strftime('%d-%m-%Y')}) బకాయి ఉంది. దయచేసి UPI ద్వారా చెల్లించగలరు:\n👉 {upi_link}\nధన్యవాదాలు."
+                elif lang == "hi":
+                    msg = f"📄 औपचारिक सूचना: प्रिय {cust_name} जी, श्री लक्ष्मी इलेक्ट्रॉनिक्स के इनवॉइस {inv['id']} (राशि: ₹{amt:,.2f}, देय तिथि: {due_dt.strftime('%d-%m-%Y')}) का भुगतान बाकी है। कृपया UPI से भुगतान करें:\n👉 {upi_link}\nधन्यवाद।"
+                elif lang == "kn":
+                    msg = f"📄 ಅಧಿಕೃತ ಸೂಚನೆ: {cust_name} ರವರೇ, ಇನ್ವಾಯ್ಸ್ {inv['id']} (ಮೊತ್ತ: ₹{amt:,.2f}) ಪಾವತಿಸಬೇಕಾಗಿದೆ. ದಯವಿಟ್ಟು UPI ಮೂಲಕ ಪಾವತಿಸಿ:\n👉 {upi_link}\nಧನ್ಯವಾದಗಳು."
+                elif lang == "ta":
+                    msg = f"📄 அதிகாரப்பூர்வ தகவல்: {cust_name} அவர்களே, இன்வாய்ஸ் {inv['id']} (தொகை: ₹{amt:,.2f}) செலுத்தப்பட வேண்டும். UPI மூலம் செலுத்தவும்:\n👉 {upi_link}\nநன்றி."
+                else:
+                    msg = f"📄 Official Statement: Dear {cust_name}, Invoice {inv['id']} (Total: ₹{amt:,.2f}, Due Date: {due_dt.strftime('%d %b %Y')}) from Sri Lakshmi Electronics is pending clearance. Kindly remit via UPI:\n👉 {upi_link}\nThank you."
+
+            else: # polite
+                if lang == "te":
+                    msg = f"నమస్కారం {cust_name} గారు! 😊 శ్రీ లక్ష్మి ఎలక్ట్రానిక్స్ నుండి చిన్న రిమైండర్. మీ బిల్లు {inv['id']} మొత్తం ₹{amt:,.2f} బకాయి ఉంది. సులభంగా క్రింది UPI లింక్ తో చెల్లించండి:\n👉 {upi_link}\nధన్యవాదాలు!"
+                elif lang == "hi":
+                    msg = f"नमस्ते {cust_name} जी! 😊 श्री लक्ष्मी इलेक्ट्रॉनिक्स की तरफ से विनम्र रिमाइंडर। आपके बिल {inv['id']} की ₹{amt:,.2f} राशि बाकी है। कृपया इस UPI लिंक से भुगतान करें:\n👉 {upi_link}\nधन्यवाद!"
+                elif lang == "kn":
+                    msg = f"ನಮಸ್ಕಾರ {cust_name} ರವರೇ! 😊 ಶ್ರೀ ಲಕ್ಷ್ಮೀ ಎಲೆಕ್ಟ್ರಾನಿಕ್ಸ್ ನೆನಪೋಲೆ. ಬಿಲ್ {inv['id']} ಮೊತ್ತ ₹{amt:,.2f} ಬಾಕಿ ಇದೆ. UPI ಮೂಲಕ ಪಾವತಿಸಿ:\n👉 {upi_link}\nಧನ್ಯವಾದಗಳು!"
+                elif lang == "ta":
+                    msg = f"வணக்கம் {cust_name} அவர்களே! 😊 ஸ்ரீ லக்ஷ்மி எலக்ட்ரானிக்ஸின் அன்பான நினைவூட்டல். ரசீது {inv['id']} தொகை ₹{amt:,.2f} நிலுவையில் உள்ளது. UPI மூலம் செலுத்தவும்:\n👉 {upi_link}\nநன்றி!"
+                else:
+                    msg = f"Hi {cust_name}! 😊 Friendly reminder from Sri Lakshmi Electronics regarding pending invoice {inv['id']} of ₹{amt:,.2f}. You can instantly pay via UPI here:\n👉 {upi_link}\nThank you for your business!"
+
+            # Update reminder draft in DB
+            cursor.execute("UPDATE invoices SET reminder_draft = ?, reminder_sent = 1 WHERE id = ?", (msg, inv['id']))
+            conn.commit()
+            conn.close()
+
+            return {
+                "agent_id": self.agent_id,
+                "agent_name": self.name,
+                "task": task_name,
+                "timestamp": now.strftime('%Y-%m-%d %H:%M:%S'),
+                "status": "COMPLETED",
+                "invoice_id": inv['id'],
+                "customer_name": cust_name,
+                "amount": amt,
+                "days_overdue": days_overdue,
+                "tone": tone,
+                "language": lang,
+                "upi_link": upi_link,
+                "formatted_reminder_message": msg
+            }
+
         else:
             conn.close()
             return {

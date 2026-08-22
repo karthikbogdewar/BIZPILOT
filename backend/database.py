@@ -190,7 +190,9 @@ def seed_demo_data(conn):
         ('PRD-103', '100W Braided Type-C Cable (1.5m)', 'Cables', 45, 7.5, 20, 399.0, 180.0, 'SUP-003', 2, 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=150'),
         ('PRD-104', 'OnePlus Nord Buds 2 TWS', 'Audio', 4, 2.5, 10, 2499.0, 1750.0, 'SUP-002', 4, 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=150'),
         ('PRD-105', 'Fastrack Limitless Smartwatch', 'Wearables', 14, 2.0, 8, 1999.0, 1300.0, 'SUP-004', 3, 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150'),
-        ('PRD-106', 'SanDisk 128GB High-Speed MicroSD', 'Storage', 36, 5.0, 15, 849.0, 520.0, 'SUP-004', 2, 'https://images.unsplash.com/photo-1628191010210-a59de33e5941?w=150')
+        ('PRD-106', 'SanDisk 128GB High-Speed MicroSD', 'Storage', 36, 5.0, 15, 849.0, 520.0, 'SUP-004', 2, 'https://images.unsplash.com/photo-1628191010210-a59de33e5941?w=150'),
+        ('PRD-107', 'Redmi Note 13 5G Smartphone', 'Smartphones', 6, 1.5, 4, 15499.0, 13200.0, 'SUP-004', 3, 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=150'),
+        ('PRD-108', 'Mi 20000mAh Fast Power Bank 3i', 'Accessories', 18, 3.0, 8, 1899.0, 1250.0, 'SUP-001', 2, 'https://images.unsplash.com/photo-1609592424368-809c951d38eb?w=150')
     ]
     cursor.executemany("INSERT INTO products VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", products)
 

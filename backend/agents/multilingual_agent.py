@@ -125,8 +125,10 @@ class MultilingualAgent(BaseBizPilotAgent):
 
         return "en"
 
-    def format_localized_reply(self, lang: str, customer_name: str, items: List[Dict[str, Any]], total: float, invoice_id: str) -> str:
-        """Formats a respectful, localized reply with items, amount, and UPI link."""
+    def format_localized_reply(self, lang: str, customer_name: str, items: List[Dict[str, Any]], total: float = 0.0, invoice_id: str = "", order_id: Optional[str] = None, **kwargs) -> str:
+        """Formats an Indic localized WhatsApp / Telegram confirmation receipt."""
+        if 'total_amount' in kwargs and not total:
+            total = kwargs['total_amount']
         t = LANGUAGE_GREETINGS.get(lang, LANGUAGE_GREETINGS["en"])
         items_str = ", ".join([f"{i.get('qty', 1)}x {i.get('name', 'Product')} (₹{i.get('unit_price', 0):.0f})" for i in items])
         

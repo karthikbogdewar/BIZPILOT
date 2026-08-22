@@ -1625,6 +1625,99 @@
     </div>
   </div>
 
+  <!-- MODAL 5: CUSTOMER KHATA (CREDIT LEDGER) OVERDUE REMINDER BUILDER -->
+  <div id="khata-reminder-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-surface-900 border border-slate-700 rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col">
+      <!-- Header -->
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-surface-950">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+            <i data-lucide="bell-ring" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h4 class="font-bold text-base text-white flex items-center gap-2">
+              Customer Khata Reminder Dispatcher
+              <span class="bg-amber-500/20 text-amber-300 text-[10px] px-2 py-0.5 rounded font-mono font-bold border border-amber-500/30">Auto UPI Link</span>
+            </h4>
+            <span class="text-xs text-slate-400">Intelligent localized payment recovery messages for customer credit</span>
+          </div>
+        </div>
+        <button onclick="closeKhataModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="p-6 space-y-4 text-xs">
+        <!-- Customer & Due Details Bar -->
+        <div class="grid grid-cols-3 gap-3 p-3.5 bg-surface-950 rounded-2xl border border-slate-800">
+          <div>
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Customer</span>
+            <strong class="text-white text-xs block mt-0.5 truncate" id="khata-modal-customer">Rajesh Sharma</strong>
+          </div>
+          <div>
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Invoice & Due</span>
+            <span class="text-slate-200 text-xs font-mono block mt-0.5" id="khata-modal-inv">INV-1002 (3d overdue)</span>
+          </div>
+          <div>
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Khata Outstanding</span>
+            <span class="text-rose-400 text-xs font-mono font-bold block mt-0.5" id="khata-modal-amount">₹4,500.00</span>
+          </div>
+        </div>
+
+        <!-- Tone Selector -->
+        <div>
+          <label class="block text-slate-400 uppercase tracking-wider text-[10px] font-bold mb-1.5">Reminder Tone (Communication Escalation)</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" onclick="setKhataTone('polite')" id="khata-tone-polite" class="p-2.5 rounded-xl border bg-brand-950/60 border-brand-500 text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
+              <span>😊 Polite Nudge</span>
+            </button>
+            <button type="button" onclick="setKhataTone('formal')" id="khata-tone-formal" class="p-2.5 rounded-xl border bg-surface-950 border-slate-800 text-slate-400 hover:text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
+              <span>💼 Formal Notice</span>
+            </button>
+            <button type="button" onclick="setKhataTone('urgent')" id="khata-tone-urgent" class="p-2.5 rounded-xl border bg-surface-950 border-slate-800 text-slate-400 hover:text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
+              <span>🚨 Urgent / Hold</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Language Selector -->
+        <div>
+          <label class="block text-slate-400 uppercase tracking-wider text-[10px] font-bold mb-1.5">Customer Preferred Language</label>
+          <div class="flex flex-wrap gap-1.5">
+            <button type="button" onclick="setKhataLanguage('en')" id="khata-lang-en" class="px-2.5 py-1 rounded-lg border bg-brand-950/80 border-brand-500 text-brand-200 text-xs font-medium cursor-pointer">🇬🇧 English</button>
+            <button type="button" onclick="setKhataLanguage('te')" id="khata-lang-te" class="px-2.5 py-1 rounded-lg border bg-surface-950 border-slate-800 text-slate-400 hover:text-white text-xs font-medium cursor-pointer">🇮🇳 తెలుగు (Telugu)</button>
+            <button type="button" onclick="setKhataLanguage('hi')" id="khata-lang-hi" class="px-2.5 py-1 rounded-lg border bg-surface-950 border-slate-800 text-slate-400 hover:text-white text-xs font-medium cursor-pointer">🇮🇳 हिन्दी (Hindi)</button>
+            <button type="button" onclick="setKhataLanguage('kn')" id="khata-lang-kn" class="px-2.5 py-1 rounded-lg border bg-surface-950 border-slate-800 text-slate-400 hover:text-white text-xs font-medium cursor-pointer">🇮🇳 ಕನ್ನಡ (Kannada)</button>
+            <button type="button" onclick="setKhataLanguage('ta')" id="khata-lang-ta" class="px-2.5 py-1 rounded-lg border bg-surface-950 border-slate-800 text-slate-400 hover:text-white text-xs font-medium cursor-pointer">🇮🇳 தமிழ் (Tamil)</button>
+          </div>
+        </div>
+
+        <!-- Formatted Editable Message Preview -->
+        <div>
+          <label class="block text-slate-400 uppercase tracking-wider text-[10px] font-bold mb-1">Generated Localized Message (with UPI Settlement link)</label>
+          <textarea id="khata-message-preview" rows="4" class="w-full bg-surface-950 border border-slate-800 rounded-xl p-3 text-white text-xs font-sans focus:outline-none focus:border-amber-500"></textarea>
+        </div>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="p-4 bg-surface-950 border-t border-slate-800 flex items-center justify-between">
+        <button onclick="closeKhataModal()" class="text-slate-400 hover:text-white text-xs px-3 py-2">Cancel</button>
+        <div class="flex items-center gap-2">
+          <button onclick="copyKhataMessage()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy
+          </button>
+          <button onclick="dispatchKhataReminder('telegram')" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-sky-600/30 transition cursor-pointer">
+            <i data-lucide="send" class="w-3.5 h-3.5"></i> Send Telegram
+          </button>
+          <button onclick="dispatchKhataReminder('whatsapp')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-600/30 transition cursor-pointer">
+            <i data-lucide="message-square" class="w-3.5 h-3.5"></i> Send WhatsApp
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST NOTIFICATION -->
   <div id="toast-notification" class="fixed bottom-5 right-5 bg-surface-900 border border-slate-700 text-white px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 max-w-md">
     <div id="toast-icon" class="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">

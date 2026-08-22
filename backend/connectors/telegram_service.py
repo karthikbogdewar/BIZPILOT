@@ -18,6 +18,9 @@ logger = logging.getLogger("telegram_service")
 
 class TelegramService:
     def __init__(self):
+        self.last_update_id = 0
+        self._poller_thread = None
+        self._is_polling = False
         self.reload_config()
 
     def reload_config(self):
@@ -46,8 +49,9 @@ class TelegramService:
         if not self.is_configured():
             return []
         url = f"{self.base_url}/getUpdates"
-        if offset:
-            url += f"?offset={offset}&timeout=5"
+        current_offset = offset if offset is not None else (self.last_update_id + 1 if self.last_update_id > 0 else None)
+        if current_offset:
+            url += f"?offset={current_offset}&timeout=5"
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "BizPilotAI/1.0"})
             with urllib.request.urlopen(req, timeout=10) as response:
@@ -58,13 +62,42 @@ class TelegramService:
             return []
 
     def poll_updates_once(self) -> List[Dict[str, Any]]:
-        """Processes all pending updates once and handles them."""
+        """Processes all pending updates once, advancing the update_id offset."""
         updates = self.get_updates()
         processed = []
         for u in updates:
+            u_id = u.get("update_id", 0)
+            if u_id > self.last_update_id:
+                self.last_update_id = u_id
             res = self.process_webhook_update(u)
-            processed.append({"update_id": u.get("update_id"), "result": res})
+            processed.append({"update_id": u_id, "result": res})
         return processed
+
+    def start_background_poller(self, interval_seconds: float = 1.5):
+        """Starts a background daemon thread that polls for Telegram messages continuously."""
+        import threading
+        import time
+
+        if self._is_polling:
+            return
+
+        self._is_polling = True
+
+        def _poll_loop():
+            logger.info("Telegram background poller started.")
+            while self._is_polling:
+                try:
+                    if self.is_configured():
+                        self.poll_updates_once()
+                except Exception as e:
+                    logger.error(f"Error in Telegram poller loop: {e}")
+                time.sleep(interval_seconds)
+
+        self._poller_thread = threading.Thread(target=_poll_loop, daemon=True)
+        self._poller_thread.start()
+
+    def stop_background_poller(self):
+        self._is_polling = False
 
     def send_message(self, chat_id: str, text: str, reply_markup: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Sends a message to any Telegram chat."""

@@ -53,6 +53,10 @@ class AgentTaskRequest(BaseModel):
     task_name: str
     payload: Optional[Dict[str, Any]] = None
 
+@app.on_event("startup")
+def startup_event():
+    telegram_service.start_background_poller(interval_seconds=1.0)
+
 # -------------------------------------------------------------
 # Multi-Agent Squad Endpoints
 # -------------------------------------------------------------
